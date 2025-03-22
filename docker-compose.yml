@@ -13,8 +13,21 @@ services:
       - ./client:/app
       - /app/node_modules
       - /app/.next
-    # depends_on:
-    #   - server
+    depends_on:
+      - server
+
+  server:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    environment:
+      - NODE_ENV=${NODE_ENV:-development}
+    volumes:
+      - ./server:/server
+    env_file:
+      - ./server/.env
 
   # server:
   #   build:
