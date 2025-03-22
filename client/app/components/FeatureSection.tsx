@@ -8,7 +8,7 @@ import {
   Shield,
   Workflow,
   Users,
-  AArrowUp
+  ArrowUp
 } from "lucide-react";
 
 type Feature = {
@@ -46,7 +46,7 @@ const features: Feature[] = [
   {
     title: "Scalable Architecture",
     description: "As your business grows, our platform grows with you, handling increasing loads with ease.",
-    icon: <AArrowUp className="h-5 w-5" />
+    icon: <ArrowUp className="h-5 w-5" />
   }
 ];
 
