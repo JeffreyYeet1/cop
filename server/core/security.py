@@ -8,6 +8,7 @@ from pydantic import ValidationError
 
 from config.settings import get_settings
 from schemas.auth import TokenData, UserInDB
+from crud.user import get_user
 
 settings = get_settings()
 

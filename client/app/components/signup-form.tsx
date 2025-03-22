@@ -7,6 +7,8 @@ import { Input } from "./ui2/input";
 import { Card, CardContent, CardFooter } from "./ui2/card";
 import { useRouter } from "next/navigation";
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+
 export function SignUpForm() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
@@ -89,7 +91,7 @@ export function SignUpForm() {
           password: '[REDACTED]'
         });
         
-        const response = await fetch('http://localhost:8000/user', {
+        const response = await fetch(`${API_URL}/api/signup`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -109,7 +111,6 @@ export function SignUpForm() {
         }
 
         alert(data.message || "Account created successfully! Please login.");
-        // router.push('/onboarding'); // Redirect to onboarding page whatever its called
         router.push('/login');
       } catch (error) {
         console.error('Error:', error);

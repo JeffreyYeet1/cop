@@ -6,6 +6,8 @@ import Input from '../components/Input';
 import Button from '../components/Button';
 import AppShell from '../components/AppShell';
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+
 export default function LoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState('');
@@ -19,19 +21,22 @@ export default function LoginPage() {
     setError('');
 
     try {
-      const response = await fetch('http://localhost:8001/api/signin', {
+      const response = await fetch(`${API_URL}/api/signin`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded',
+          'Accept': 'application/json',
         },
+        credentials: 'include',
         body: new URLSearchParams({
           username: email,
           password: password,
           scope: 'me'
-        })
+        }).toString()
       });
 
       const data = await response.json();
+      console.log('Login response:', data);
 
       if (!response.ok) {
         throw new Error(data.detail || 'Login failed');
@@ -39,10 +44,12 @@ export default function LoginPage() {
 
       // Store token in localStorage
       localStorage.setItem('token', data.access_token);
+      console.log('Token stored:', data.access_token);
       
       // Redirect to onboarding
       router.push('/onboarding');
     } catch (err) {
+      console.error('Login error:', err);
       setError(err instanceof Error ? err.message : 'Login failed. Please try again.');
     } finally {
       setIsLoading(false);

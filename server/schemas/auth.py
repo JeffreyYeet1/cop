@@ -17,7 +17,9 @@ class UserCreate(UserBase):
     password: str
 
 class User(UserBase):
+    id: str | None = None
     created_at: datetime | None = None
+    disabled: bool = False
 
     class Config:
         from_attributes = True
