@@ -107,7 +107,7 @@ const OnboardingScreen = () => {
       }
       
       // Make API call to save to database
-      const response = await fetch('http://localhost:8000/onboarding', {
+      const response = await fetch('http://localhost:8000/onboarding/preferences', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
