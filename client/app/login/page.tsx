@@ -19,21 +19,31 @@ export default function LoginPage() {
     setError('');
 
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // For demo purposes, just check if email and password are not empty
-      if (email && password) {
-        // Store token in localStorage
-        localStorage.setItem('token', 'demo-token');
-        
-        // Redirect to onboarding
-        router.push('/onboarding');
-      } else {
-        setError('Please enter both email and password');
+      const response = await fetch('http://localhost:8001/api/signin', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: new URLSearchParams({
+          username: email,
+          password: password,
+          scope: 'me'
+        })
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.detail || 'Login failed');
       }
+
+      // Store token in localStorage
+      localStorage.setItem('token', data.access_token);
+      
+      // Redirect to onboarding
+      router.push('/onboarding');
     } catch (err) {
-      setError('Login failed. Please try again.');
+      setError(err instanceof Error ? err.message : 'Login failed. Please try again.');
     } finally {
       setIsLoading(false);
     }

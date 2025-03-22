@@ -1,12 +1,11 @@
 from supabase import Client, create_client
-from config import api, url
+from config.settings import get_settings
 
-api_url: str = url
-key: str = api
+settings = get_settings()
 
-def create_supabase_client():
+def create_supabase_client() -> Client:
     supabase: Client = create_client(
-        supabase_url=api_url,
-        supabase_key=key
+        supabase_url=settings.SUPABASE_URL,
+        supabase_key=settings.SUPABASE_API_KEY
     )
     return supabase
