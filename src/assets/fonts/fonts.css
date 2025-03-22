@@ -1,0 +1,48 @@
+/* System font stack */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700;800;900&display=swap');
+
+/* Apple SF Pro system font */
+@font-face {
+  font-family: 'SF Pro Display';
+  font-style: normal;
+  font-weight: 400;
+  src: local('-apple-system'), local('BlinkMacSystemFont');
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'SF Pro Display';
+  font-style: normal;
+  font-weight: 300;
+  src: local('-apple-system'), local('BlinkMacSystemFont');
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'SF Pro Display';
+  font-style: normal;
+  font-weight: 500;
+  src: local('-apple-system'), local('BlinkMacSystemFont');
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'SF Pro Display';
+  font-style: normal;
+  font-weight: 600;
+  src: local('-apple-system'), local('BlinkMacSystemFont');
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'SF Pro Display';
+  font-style: normal;
+  font-weight: 700;
+  src: local('-apple-system'), local('BlinkMacSystemFont');
+  font-display: swap;
+}
+
+/* Enable this for non-Apple devices to fallback to Inter */
+:root {
+  --font-sans: 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Inter', system-ui, sans-serif;
+}

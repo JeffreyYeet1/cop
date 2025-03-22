@@ -1,0 +1,89 @@
+# Dependencies
+node_modules
+/.pnp
+.pnp.js
+.yarn/
+!.yarn/cache
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/sdks
+!.yarn/versions
+
+# Bun specific
+bun.lockb
+
+# Testing
+/coverage
+/.nyc_output
+
+# Production build
+/dist
+/build
+/out
+/.next
+/.nuxt
+/.output
+
+# Environment variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+.env*.local
+
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+bun-debug.log*
+
+# Editor directories and files
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+!.vscode/*.code-snippets
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+.project
+.classpath
+*.launch
+.settings/
+*.sublime-workspace
+
+# OS specific
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Debug
+.eslintcache
+.stylelintcache
+.direnv
+.envrc
+
+# Misc
+*.tgz
+*.tsbuildinfo
+.npm
+.eslintcache
+.node_repl_history
+.vite
+.cache
+dist-ssr
+*.local

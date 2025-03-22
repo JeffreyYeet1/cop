@@ -1,29 +1,38 @@
 version: '3.8'
 
 services:
-  client:
+  # Development service
+  dev:
     build:
-      context: ./client
-      dockerfile: Dockerfile
+      context: .
+      target: dev
     ports:
-      - "3000:3000"
-    environment:
-      - NODE_ENV=${NODE_ENV:-development}
+      - "5173:5173"
     volumes:
-      - ./client:/app
-      - /app/node_modules
-      - /app/.next
-    # depends_on:
-    #   - server
+      - ./src:/app/src
+      - ./public:/app/public
+    environment:
+      - NODE_ENV=development
+    command: bun run dev
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:5173"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
 
-  # server:
-  #   build:
-  #     context: ./server
-  #     dockerfile: Dockerfile
-  #   ports:
-  #     - "8000:8000"
-  #   environment:
-  #     - NODE_ENV=production
-  #   volumes:
-  #     - ./server:/app
-  #     - /app/node_modules 
+  # Production service
+  prod:
+    build:
+      context: .
+      target: runner
+    ports:
+      - "80:80"
+    environment:
+      - NODE_ENV=production
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:80"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
