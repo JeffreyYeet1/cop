@@ -1,3 +1,5 @@
+"use client";
+
 import React from 'react';
 import TaskCard from './TaskCard';
 import { Plus } from 'lucide-react';
@@ -44,7 +46,7 @@ const DailyTasks = () => {
   ];
 
   return (
-    <div className="w-full max-w-3xl mx-auto p-6">
+    <div className="w-full max-w-2xl mx-auto p-6">
       {/* Header */}
       <div className="mb-8">
         <h1 className="text-4xl font-bold text-gray-900">{dayName}</h1>
