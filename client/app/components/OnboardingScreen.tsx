@@ -1,3 +1,5 @@
+'use client';
+
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 
@@ -44,11 +46,13 @@ const questions: Question[] = [
   },
 ];
 
-const OnboardingScreen: React.FC = () => {
+const OnboardingScreen = () => {
   const router = useRouter();
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [selectedAnswers, setSelectedAnswers] = useState<Record<number, string>>({});
   const [completed, setCompleted] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const currentQuestion = questions[currentQuestionIndex];
 
@@ -59,47 +63,106 @@ const OnboardingScreen: React.FC = () => {
     });
   };
 
-  const handleNext = () => {
-    if (currentQuestionIndex < questions.length - 1) {
-      setCurrentQuestionIndex(currentQuestionIndex + 1);
-    } else {
-      // Complete onboarding
-      setCompleted(true);
-      // Save preferences to localStorage
-      localStorage.setItem('userPreferences', JSON.stringify(selectedAnswers));
-    }
-  };
-
-  const handleContinue = () => {
-    // Redirect to dashboard after completing onboarding
-    router.push('/dashboard');
-  };
-
   const isOptionSelected = (optionId: string) => {
     return selectedAnswers[currentQuestion.id] === optionId;
   };
 
   const canContinue = !!selectedAnswers[currentQuestion.id];
 
+  const handleNext = () => {
+    if (currentQuestionIndex < questions.length - 1) {
+      setCurrentQuestionIndex(currentQuestionIndex + 1);
+    } else {
+      // Complete onboarding
+      setCompleted(true);
+      savePreferencesToDatabase();
+    }
+  };
+
+  const handleContinue = () => {
+    router.push('/dashboard');
+  };
+
+  const savePreferencesToDatabase = async () => {
+    try {
+      setIsSaving(true);
+      setError(null);
+      
+      // Format the preferences data
+      const formattedPreferences = Object.entries(selectedAnswers).map(([questionId, answerId]) => {
+        const question = questions.find(q => q.id === parseInt(questionId));
+        const option = question?.options.find(o => o.id === answerId);
+        
+        return {
+          questionText: question?.text || '',
+          answerId: answerId,
+          answerText: option?.text || '',
+        };
+      });
+      
+      // Get the token from localStorage
+      const token = localStorage.getItem('token');
+      if (!token) {
+        throw new Error('Authentication token not found');
+      }
+      
+      // Make API call to save to database
+      const response = await fetch('http://localhost:8000/onboarding', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          preferences: formattedPreferences,
+        }),
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.detail || 'Failed to save preferences');
+      }
+      
+      console.log('Preferences saved successfully');
+      
+    } catch (err) {
+      console.error('Error saving preferences:', err);
+      setError(err instanceof Error ? err.message : 'An unknown error occurred');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  // Show completion screen if all questions are answered
   if (completed) {
     return (
       <div className="h-full flex flex-col items-center justify-center bg-gray-50">
-        <div className="w-full max-w-md mx-auto bg-white rounded-3xl onboarding-card p-8 mt-4 overflow-hidden">
-          <div className="w-16 h-16 mx-auto bg-[#3478F6] bg-opacity-10 rounded-full flex items-center justify-center mb-6">
-            <svg className="w-10 h-10 text-[#3478F6]" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
-              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd"></path>
-            </svg>
+        <div className="w-full max-w-md mx-auto bg-white rounded-3xl px-6 py-8 shadow-sm">
+          <div className="text-center">
+            <div className="flex justify-center mb-4">
+              <div className="h-16 w-16 bg-green-100 rounded-full flex items-center justify-center">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+              </div>
+            </div>
+            <h2 className="text-xl font-medium text-gray-800 mb-2">All set!</h2>
+            <p className="text-gray-600 mb-6">
+              Your preferences have been saved. We'll use these to personalize your experience.
+            </p>
+            {error && (
+              <div className="mb-6 p-3 bg-red-50 text-red-700 rounded-lg">
+                {error}
+              </div>
+            )}
+            <button
+              className={`w-full py-3.5 px-4 bg-blue-500 rounded-full text-white font-medium text-base transition-all hover:bg-opacity-90 ${isSaving ? 'opacity-70 cursor-not-allowed' : ''}`}
+              onClick={handleContinue}
+              disabled={isSaving}
+            >
+              {isSaving ? 'Saving...' : 'Continue'}
+            </button>
           </div>
-          <h1 className="text-2xl font-semibold text-center text-gray-800 mb-2">All done</h1>
-          <p className="text-gray-500 text-center mb-8">
-            Your productivity profile has been created. We'll use this to tailor your experience.
-          </p>
-          <button
-            className="w-full py-3.5 px-4 bg-[#4C8DFF] continue-button rounded-full text-white font-medium text-base transition-all hover:bg-opacity-90"
-            onClick={handleContinue}
-          >
-            Continue
-          </button>
         </div>
       </div>
     );
@@ -107,7 +170,7 @@ const OnboardingScreen: React.FC = () => {
 
   return (
     <div className="h-full flex flex-col items-center justify-center bg-gray-50">
-      <div className="w-full max-w-md mx-auto bg-white rounded-3xl onboarding-card px-6 py-8">
+      <div className="w-full max-w-md mx-auto bg-white rounded-3xl px-6 py-8 shadow-sm">
         {/* Header */}
         <div>
           <div className="flex justify-between items-center">
@@ -125,9 +188,9 @@ const OnboardingScreen: React.FC = () => {
             {currentQuestion.options.map((option) => (
               <button
                 key={option.id}
-                className={`w-full flex items-center py-4 px-5 option-button border transition-all ${
+                className={`w-full flex items-center py-4 px-5 rounded-xl border transition-all ${
                   isOptionSelected(option.id)
-                    ? 'border-[#3478F6] bg-[#3478F6] bg-opacity-5'
+                    ? 'border-blue-500 bg-blue-50'
                     : 'border border-gray-200 bg-white'
                 }`}
                 onClick={() => handleSelect(option.id)}
@@ -148,11 +211,11 @@ const OnboardingScreen: React.FC = () => {
           {questions.map((_, index) => (
             <div
               key={index}
-              className={`h-1.5 rounded-full progress-dot ${
+              className={`h-1.5 rounded-full ${
                 index === currentQuestionIndex
-                  ? 'active-dot bg-[#4C8DFF] w-6'
+                  ? 'bg-blue-500 w-6'
                   : index < currentQuestionIndex
-                    ? 'w-1.5 bg-[#4C8DFF] opacity-30'
+                    ? 'w-1.5 bg-blue-500 opacity-30'
                     : 'w-1.5 bg-gray-200'
               }`}
             />
@@ -161,7 +224,7 @@ const OnboardingScreen: React.FC = () => {
 
         {/* Continue button */}
         <button
-          className={`w-full py-3.5 px-4 bg-[#4C8DFF] continue-button rounded-full text-white font-medium text-base transition-all ${
+          className={`w-full py-3.5 px-4 bg-blue-500 rounded-full text-white font-medium text-base transition-all ${
             !canContinue ? 'opacity-50 cursor-not-allowed' : 'hover:bg-opacity-90'
           }`}
           onClick={handleNext}
