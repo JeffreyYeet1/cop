@@ -10,4 +10,11 @@ export const Icons = {
   gitHub: Github,
   google: Google,
   mail: Mail,
-}; 
+} as const;
+
+export const GitHubIcon = Github;
+export const GoogleIcon = Google;
+export const MailIcon = Mail;
+export const SpinnerIcon = Loader2;
+
+export type Icon = keyof typeof Icons; 

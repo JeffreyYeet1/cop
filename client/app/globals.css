@@ -235,13 +235,13 @@
 
 /* Base transition */
 .base-transition {
-  transition: all 0.8s cubic-bezier(0.22, 1, 0.36, 1);
+  @apply transition-all duration-300 ease-in-out;
   will-change: transform, opacity, filter;
 }
 
 /* Enhanced component styles with optimized transitions */
 .feature-card {
-  @apply base-transition;
+  @apply transition-all duration-300 ease-in-out;
   background: linear-gradient(135deg, 
     rgba(255, 255, 255, 0.9), 
     rgba(255, 255, 255, 0.7)
@@ -250,7 +250,7 @@
 }
 
 .feature-card:hover {
-  transform: translateY(-6px);
+  @apply -translate-y-6;
   background: linear-gradient(135deg, 
     rgba(255, 255, 255, 0.95), 
     rgba(255, 255, 255, 0.85)
@@ -261,33 +261,32 @@
 }
 
 .feature-card-icon {
-  @apply base-transition;
+  @apply transition-all duration-300 ease-in-out;
 }
 
 .feature-card:hover .feature-card-icon {
-  transform: scale(1.1) rotate(5deg);
+  @apply scale-110 rotate-[5deg];
   background: linear-gradient(135deg, #BCE7FD, #7EB2FF);
   box-shadow: 0 8px 16px -4px rgba(126, 178, 255, 0.2);
   color: white;
 }
 
 .feature-card-bg-icon {
-  transition: all 0.8s cubic-bezier(0.22, 1, 0.36, 1);
+  @apply transition-all duration-300 ease-in-out;
   will-change: transform, opacity;
 }
 
 .feature-card:hover .feature-card-bg-icon {
-  transform: scale(1.2) rotate(-15deg) translateX(10px);
-  opacity: 0.08;
+  @apply scale-120 -rotate-[15deg] translate-x-2.5 opacity-20;
 }
 
 .stat-card {
-  @apply base-transition;
+  @apply transition-all duration-300 ease-in-out;
   backdrop-filter: blur(8px);
 }
 
 .stat-card:hover {
-  transform: translateY(-4px) scale(1.01);
+  @apply -translate-y-4 scale-[1.01];
   background: linear-gradient(135deg, 
     rgba(255, 255, 255, 0.3), 
     rgba(255, 255, 255, 0.1)
@@ -298,12 +297,11 @@
 }
 
 .stat-number {
-  @apply base-transition;
+  @apply transition-all duration-300 ease-in-out;
 }
 
 .stat-card:hover .stat-number {
-  transform: scale(1.05);
-  filter: brightness(1.1);
+  @apply scale-105 brightness-110;
 }
 
 /* Optimized background animation */
@@ -322,38 +320,38 @@
 
 /* Optimized hover effects */
 .hover-lift {
-  @apply base-transition;
+  @apply transition-all duration-300 ease-in-out;
 }
 
 .hover-lift:hover {
-  transform: translateY(-6px);
+  @apply -translate-y-6;
   box-shadow: 
     0 15px 30px -10px rgba(126, 178, 255, 0.2),
     0 0 15px rgba(126, 178, 255, 0.1);
 }
 
 .hover-scale {
-  @apply base-transition;
+  @apply transition-all duration-300 ease-in-out;
 }
 
 .hover-scale:hover {
-  transform: scale(1.03);
+  @apply scale-103;
 }
 
 .hover-bright {
-  @apply base-transition;
+  @apply transition-all duration-300 ease-in-out;
 }
 
 .hover-bright:hover {
-  filter: brightness(1.1);
+  @apply brightness-110;
 }
 
 .badge-pill {
-  @apply base-transition;
+  @apply transition-all duration-300 ease-in-out;
 }
 
 .badge-pill:hover {
-  transform: translateY(-2px);
+  @apply -translate-y-0.5;
   background: linear-gradient(135deg, #BCE7FD30, #7EB2FF30);
   box-shadow: 0 4px 12px -4px rgba(126, 178, 255, 0.3);
 }

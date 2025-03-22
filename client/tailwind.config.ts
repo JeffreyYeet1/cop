@@ -60,6 +60,16 @@ const config = {
       },
     },
   },
+  plugins: [
+    function({ addUtilities }) {
+      addUtilities({
+        '.base-transition': {
+          'transition': 'all 0.8s cubic-bezier(0.22, 1, 0.36, 1)',
+          'will-change': 'transform, opacity, filter',
+        },
+      })
+    },
+  ],
 } satisfies Config
 
 export default config 
