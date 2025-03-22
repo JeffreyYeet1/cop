@@ -1,5 +1,6 @@
+from pydantic import BaseModel
 from datetime import datetime, timedelta, timezone
-from typing import Annotated
+from typing import Annotated, List, Dict, Any
 from db.supabase import create_supabase_client
 import os
 import bcrypt
@@ -7,7 +8,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 import jwt
-from fastapi import Depends, FastAPI, HTTPException, Security, status
+from fastapi import Depends, FastAPI, HTTPException, Security, status, Body
 from fastapi.security import (
     OAuth2PasswordBearer,
     OAuth2PasswordRequestForm,
@@ -43,6 +44,21 @@ class User(BaseModel):
 
 class UserInDB(User):
     hashed_password: str | None = None
+
+
+class PreferenceItem(BaseModel):
+    questionText: str
+    answerId: str
+    answerText: str
+
+class OnboardingPreferences(BaseModel):
+    preferences: List[PreferenceItem]
+
+
+# class UserPreference(BaseModel):
+#     questionText: str
+#     answerId: str
+#     answerText: str
 
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -271,3 +287,90 @@ def create_user(user: User):
 @app.get("/status/")
 async def read_system_status(current_user: Annotated[User, Depends(get_current_user)]):
     return {"status": "ok"}
+
+
+# Replace the existing /onboarding endpoint
+@app.post("/onboarding")
+async def save_onboarding_preferences(
+    preferences: OnboardingPreferences,
+    current_user: Annotated[User, Depends(get_current_user)]
+):
+    try:
+        print(f"Saving onboarding preferences for user: {current_user.email}")
+        
+        # Get the user ID from the email
+        user_query = supabase.from_("users").select("id").eq("email", current_user.email).execute()
+        
+        if not user_query.data:
+            raise HTTPException(status_code=404, detail="User not found")
+        
+        user_id = user_query.data[0]["id"]
+        
+        # Check if preferences already exist for this user
+        existing_prefs = supabase.from_("user_preferences").select("*").eq("user_id", user_id).execute()
+        
+        preference_data = {
+            "user_id": user_id,
+            "preferences": [pref.dict() for pref in preferences.preferences]
+        }
+        
+        if existing_prefs.data:
+            # Update existing preferences
+            update_response = supabase.from_("user_preferences").update({
+                "preferences": preference_data["preferences"],
+                "updated_at": datetime.now(timezone.utc).isoformat()
+            }).eq("user_id", user_id).execute()
+            print("Updated existing preferences")
+        else:
+            # Insert new preferences
+            insert_response = supabase.from_("user_preferences").insert({
+                **preference_data,
+                "created_at": datetime.now(timezone.utc).isoformat(),
+                "updated_at": datetime.now(timezone.utc).isoformat()
+            }).execute()
+            print("Inserted new preferences")
+        
+        return {"message": "Preferences saved successfully"}
+        
+    except Exception as e:
+        print(f"Error saving preferences: {str(e)}")
+        print(f"Error type: {type(e)}")
+        import traceback
+        print(f"Traceback: {traceback.format_exc()}")
+        raise HTTPException(status_code=500, detail=f"Failed to save preferences: {str(e)}")
+
+
+
+
+
+
+
+# @app.get("/onboarding")
+# async def get_onboarding_preferences(
+#     current_user: Annotated[User, Depends(get_current_user)]
+# ):
+#     try:
+#         print(f"Getting onboarding preferences for user: {current_user.email}")
+        
+#         # Get the user ID from the email
+#         user_query = supabase.from_("users").select("id").eq("email", current_user.email).execute()
+        
+#         if not user_query.data:
+#             raise HTTPException(status_code=404, detail="User not found")
+        
+#         user_id = user_query.data[0]["id"]
+        
+#         # Get preferences for this user
+#         prefs_query = supabase.from_("user_preferences").select("*").eq("user_id", user_id).execute()
+        
+#         if not prefs_query.data:
+#             return {"preferences": None}
+        
+#         return {"preferences": prefs_query.data[0]["preferences"]}
+        
+#     except Exception as e:
+#         print(f"Error getting preferences: {str(e)}")
+#         print(f"Error type: {type(e)}")
+#         import traceback
+#         print(f"Traceback: {traceback.format_exc()}")
+#         raise HTTPException(status_code=500, detail=f"Failed to get preferences: {str(e)}")

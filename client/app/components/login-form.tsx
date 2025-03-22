@@ -79,7 +79,7 @@ export function LoginForm() {
           throw new Error(data.detail || 'Failed to login');
         }
 
-        // Store the token
+        // Store the actual token from the server
         localStorage.setItem('token', data.access_token);
         console.log('Token stored in localStorage');
         
