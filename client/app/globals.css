@@ -117,22 +117,25 @@
   animation-iteration-count: infinite;
 }
 
+/* Optimized keyframes */
 @keyframes fadeIn {
   from {
     opacity: 0;
     filter: blur(5px);
+    transform: scale(0.98);
   }
   to {
     opacity: 1;
     filter: blur(0);
+    transform: scale(1);
   }
 }
 
 @keyframes slideUp {
   from {
     opacity: 0;
-    transform: translateY(40px);
-    filter: blur(5px);
+    transform: translateY(30px);
+    filter: blur(3px);
   }
   to {
     opacity: 1;
@@ -145,11 +148,7 @@
   0% {
     opacity: 0;
     transform: scale(0.95);
-    filter: blur(5px);
-  }
-  50% {
-    opacity: 0.5;
-    transform: scale(1.02);
+    filter: blur(3px);
   }
   100% {
     opacity: 1;
@@ -161,11 +160,8 @@
 @keyframes explosionText {
   0% {
     opacity: 0;
-    transform: scale(0.8) rotate(-3deg);
-    letter-spacing: -0.2em;
-  }
-  40% {
-    opacity: 0.6;
+    transform: scale(0.9) rotate(-2deg);
+    letter-spacing: -0.1em;
   }
   100% {
     opacity: 1;
@@ -179,178 +175,138 @@
     transform: translateY(0);
   }
   50% {
-    transform: translateY(10px);
+    transform: translateY(8px);
   }
 }
 
+/* Optimized animation classes */
 .animate-fade-in {
-  animation: fadeIn 1.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  animation: fadeIn 0.8s cubic-bezier(0.22, 1, 0.36, 1) forwards;
 }
 
 .animate-slide-up {
-  animation: slideUp 1.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  animation: slideUp 0.8s cubic-bezier(0.22, 1, 0.36, 1) forwards;
 }
 
 .animate-scale-in {
-  animation: scaleIn 1.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  animation: scaleIn 0.8s cubic-bezier(0.22, 1, 0.36, 1) forwards;
 }
 
 .animate-explosion {
-  animation: explosionText 2s cubic-bezier(0.23, 1, 0.32, 1) forwards;
-  display: inline-block;
+  animation: explosionText 1.2s cubic-bezier(0.23, 1, 0.32, 1) forwards;
 }
 
 .animate-bounce {
-  animation: bounce 2s ease-in-out infinite;
+  animation: bounce 2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
 }
 
 @keyframes gradientBackground {
-  0% {
+  0%, 100% {
     background-position: 0% 50%;
     background-size: 200% 200%;
-  }
-  25% {
-    background-position: 50% 100%;
-    background-size: 250% 250%;
   }
   50% {
     background-position: 100% 50%;
-    background-size: 200% 200%;
-  }
-  75% {
-    background-position: 50% 0%;
     background-size: 250% 250%;
-  }
-  100% {
-    background-position: 0% 50%;
-    background-size: 200% 200%;
   }
 }
 
 @keyframes pulse-slow {
-  0% {
+  0%, 100% {
     opacity: 0.3;
-    transform: scale(1) translateY(0px);
+    transform: scale(1);
     filter: blur(15px);
   }
   50% {
     opacity: 0.5;
-    transform: scale(1.1) translateY(-10px);
-    filter: blur(20px);
-  }
-  100% {
-    opacity: 0.3;
-    transform: scale(1) translateY(0px);
-    filter: blur(15px);
+    transform: scale(1.05);
+    filter: blur(18px);
   }
 }
 
+/* Optimized animation classes */
 .animate-gradient-slow {
-  background-size: 400% 400%;
-  animation: gradientBackground 12s ease infinite;
+  animation: gradientBackground 8s ease infinite;
 }
 
 .animate-pulse-slow {
-  animation: pulse-slow 6s ease-in-out infinite;
+  animation: pulse-slow 4s ease-in-out infinite;
 }
 
-@keyframes float {
-  0% {
-    transform: translateY(-8px) translateX(-4px) scale(1.02);
-  }
-  50% {
-    transform: translateY(-12px) translateX(4px) scale(1.02);
-  }
-  100% {
-    transform: translateY(-8px) translateX(-4px) scale(1.02);
-  }
-}
-
-.feature-card {
+/* Base transition */
+.base-transition {
   transition: all 0.8s cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: transform, opacity, filter;
+}
+
+/* Enhanced component styles with optimized transitions */
+.feature-card {
+  @apply base-transition;
   background: linear-gradient(135deg, 
     rgba(255, 255, 255, 0.9), 
     rgba(255, 255, 255, 0.7)
   );
-  transform-origin: center;
-  will-change: transform, box-shadow, background;
   backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
 }
 
 .feature-card:hover {
-  transform: translateY(-8px) translateX(0);
+  transform: translateY(-6px);
   background: linear-gradient(135deg, 
     rgba(255, 255, 255, 0.95), 
     rgba(255, 255, 255, 0.85)
   );
   box-shadow: 
-    0 20px 40px -15px rgba(126, 178, 255, 0.2),
-    0 0 20px rgba(126, 178, 255, 0.1);
+    0 15px 30px -10px rgba(126, 178, 255, 0.15),
+    0 0 15px rgba(126, 178, 255, 0.1);
 }
 
 .feature-card-icon {
-  transition: all 0.8s cubic-bezier(0.22, 1, 0.36, 1);
-  will-change: transform, background-color, box-shadow;
+  @apply base-transition;
 }
 
 .feature-card:hover .feature-card-icon {
-  transform: scale(1.2) rotate(8deg);
+  transform: scale(1.1) rotate(5deg);
   background: linear-gradient(135deg, #BCE7FD, #7EB2FF);
-  box-shadow: 
-    0 10px 20px -5px rgba(126, 178, 255, 0.3),
-    0 0 0 10px rgba(126, 178, 255, 0.1);
+  box-shadow: 0 8px 16px -4px rgba(126, 178, 255, 0.2);
   color: white;
+}
+
+.feature-card-bg-icon {
+  transition: all 0.8s cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: transform, opacity;
 }
 
 .feature-card:hover .feature-card-bg-icon {
   transform: scale(1.2) rotate(-15deg) translateX(10px);
   opacity: 0.08;
-  transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-@keyframes floatStat {
-  0% {
-    transform: translateY(-5px) translateX(-2px) scale(1.02);
-  }
-  50% {
-    transform: translateY(-8px) translateX(2px) scale(1.02);
-  }
-  100% {
-    transform: translateY(-5px) translateX(-2px) scale(1.02);
-  }
 }
 
 .stat-card {
-  transition: all 0.8s cubic-bezier(0.22, 1, 0.36, 1);
-  transform-origin: center;
-  will-change: transform, background, box-shadow;
+  @apply base-transition;
   backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
 }
 
 .stat-card:hover {
-  transform: translateY(-5px) scale(1.02);
+  transform: translateY(-4px) scale(1.01);
   background: linear-gradient(135deg, 
     rgba(255, 255, 255, 0.3), 
     rgba(255, 255, 255, 0.1)
   );
   box-shadow: 
-    0 15px 30px -10px rgba(126, 178, 255, 0.2),
-    0 0 15px rgba(126, 178, 255, 0.1);
+    0 12px 24px -8px rgba(126, 178, 255, 0.15),
+    0 0 12px rgba(126, 178, 255, 0.1);
 }
 
 .stat-number {
-  transition: all 0.8s cubic-bezier(0.22, 1, 0.36, 1);
-  will-change: transform, filter;
+  @apply base-transition;
 }
 
 .stat-card:hover .stat-number {
-  transform: scale(1.1);
-  filter: brightness(1.2);
+  transform: scale(1.05);
+  filter: brightness(1.1);
 }
 
-/* Animated background for the entire page */
+/* Optimized background animation */
 .animated-gradient-background {
   background: linear-gradient(
     -45deg, 
@@ -359,56 +315,45 @@
     rgba(188, 231, 253, 0.05),
     rgba(255, 255, 255, 0.02)
   );
-  background-size: 400% 400%;
-  animation: gradientBackground 15s ease infinite;
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  z-index: -1;
+  background-size: 300% 300%;
+  animation: gradientBackground 12s ease infinite;
+  @apply fixed inset-0 -z-1;
 }
 
-/* Enhanced hover effects */
+/* Optimized hover effects */
 .hover-lift {
-  transition: all 0.8s cubic-bezier(0.22, 1, 0.36, 1);
-  will-change: transform, box-shadow;
+  @apply base-transition;
 }
 
 .hover-lift:hover {
-  transform: translateY(-8px);
+  transform: translateY(-6px);
   box-shadow: 
-    0 20px 40px -15px rgba(126, 178, 255, 0.25),
-    0 0 20px rgba(126, 178, 255, 0.1);
+    0 15px 30px -10px rgba(126, 178, 255, 0.2),
+    0 0 15px rgba(126, 178, 255, 0.1);
 }
 
 .hover-scale {
-  transition: all 0.8s cubic-bezier(0.22, 1, 0.36, 1);
-  will-change: transform;
+  @apply base-transition;
 }
 
 .hover-scale:hover {
-  transform: scale(1.05);
+  transform: scale(1.03);
 }
 
 .hover-bright {
-  transition: all 0.8s cubic-bezier(0.22, 1, 0.36, 1);
-  will-change: filter;
+  @apply base-transition;
 }
 
 .hover-bright:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
 }
 
 .badge-pill {
-  transition: all 0.8s cubic-bezier(0.22, 1, 0.36, 1);
-  will-change: transform, background, box-shadow;
+  @apply base-transition;
 }
 
 .badge-pill:hover {
-  transform: translateY(-2px) translateX(2px);
-  background: linear-gradient(135deg, #BCE7FD40, #7EB2FF40);
-  box-shadow: 
-    0 5px 15px -5px rgba(126, 178, 255, 0.4),
-    0 0 0 5px rgba(126, 178, 255, 0.1);
+  transform: translateY(-2px);
+  background: linear-gradient(135deg, #BCE7FD30, #7EB2FF30);
+  box-shadow: 0 4px 12px -4px rgba(126, 178, 255, 0.3);
 }

@@ -1,19 +1,14 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useMemo } from "react";
 import Image from "next/image";
 import {
-  Zap,
-  LineChart,
-  Shield,
-  Workflow,
-  Users,
   CheckCircle,
-  Star,
   Clock,
   Calendar,
   Bell,
-  Target
+  Target,
+  Users
 } from "lucide-react";
 
 type Feature = {
@@ -59,6 +54,9 @@ const FeaturesSection = () => {
   const [visibleSection, setVisibleSection] = useState(false);
   const sectionRef = useRef<HTMLDivElement>(null);
 
+  // Memoize features to prevent unnecessary re-renders
+  const memoizedFeatures = useMemo(() => features, []);
+
   useEffect(() => {
     const observer = new IntersectionObserver(
       (entries) => {
@@ -66,22 +64,26 @@ const FeaturesSection = () => {
           setVisibleSection(true);
         }
       },
-      { threshold: 0.1 }
+      { 
+        threshold: 0.1,
+        rootMargin: '50px'  // Add rootMargin for earlier triggering
+      }
     );
 
     if (sectionRef.current) {
       observer.observe(sectionRef.current);
     }
 
-    return () => {
-      if (sectionRef.current) {
-        observer.unobserve(sectionRef.current);
-      }
-    };
+    return () => observer.disconnect();
   }, []);
 
   return (
-    <section id="features-section" ref={sectionRef} className="py-24 relative overflow-hidden">
+    <section 
+      id="features-section" 
+      ref={sectionRef} 
+      className="py-24 relative overflow-hidden"
+      style={{ willChange: 'opacity, transform' }}
+    >
       {/* Animated gradient background */}
       <div className="animated-gradient-background"></div>
       
@@ -91,7 +93,13 @@ const FeaturesSection = () => {
       <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-[#BCE7FD]/5 rounded-full blur-3xl animate-pulse-slow" style={{ animationDelay: '4s' }}></div>
 
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative">
-        <div className={`flex flex-col items-center text-center mb-20 max-w-3xl mx-auto animate-slide-up ${!visibleSection ? 'opacity-0' : ''}`} style={{ animationDelay: '100ms' }}>
+        <div 
+          className={`flex flex-col items-center text-center mb-20 max-w-3xl mx-auto animate-slide-up ${!visibleSection ? 'opacity-0' : ''}`}
+          style={{ 
+            animationDelay: '100ms',
+            willChange: 'transform, opacity'
+          }}
+        >
           <div className="inline-flex items-center justify-center rounded-full bg-[#BCE7FD]/20 px-4 py-1.5 text-sm font-medium text-[#7EB2FF] mb-6 backdrop-blur-sm badge-pill">
             <span className="flex h-1.5 w-1.5 rounded-full bg-[#7EB2FF] mr-2"></span>
             <span>Student Solutions</span>
@@ -106,11 +114,14 @@ const FeaturesSection = () => {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10 max-w-6xl mx-auto">
-          {features.map((feature, index) => (
+          {memoizedFeatures.map((feature, index) => (
             <div
-              key={index}
+              key={feature.title}  // Use title as key instead of index
               className={`feature-card relative overflow-hidden rounded-xl border border-neutral-100 p-8 gradient-blur animate-slide-up ${!visibleSection ? 'opacity-0' : ''}`}
-              style={{ animationDelay: `${200 + (index * 100)}ms` }}
+              style={{ 
+                animationDelay: `${200 + (index * 100)}ms`,
+                willChange: 'transform, opacity, background'
+              }}
             >
               <div className="feature-card-icon flex h-12 w-12 items-center justify-center rounded-full bg-[#BCE7FD]/20 text-[#7EB2FF]">
                 {feature.icon}
@@ -133,7 +144,13 @@ const FeaturesSection = () => {
           ))}
         </div>
 
-        <div className={`mt-24 rounded-3xl bg-gradient-to-br from-white/80 via-white/60 to-white/40 border border-[#E2E8F0]/50 p-10 lg:p-16 max-w-6xl mx-auto animate-slide-up backdrop-blur-xl shadow-xl hover-glow ${!visibleSection ? 'opacity-0' : ''}`} style={{ animationDelay: '800ms' }}>
+        <div 
+          className={`mt-24 rounded-3xl bg-gradient-to-br from-white/80 via-white/60 to-white/40 border border-[#E2E8F0]/50 p-10 lg:p-16 max-w-6xl mx-auto animate-slide-up backdrop-blur-xl shadow-xl hover-glow ${!visibleSection ? 'opacity-0' : ''}`}
+          style={{ 
+            animationDelay: '800ms',
+            willChange: 'transform, opacity'
+          }}
+        >
           <div className="grid gap-12 md:grid-cols-2 lg:gap-20">
             <div className="space-y-8">
               <div className="space-y-4">

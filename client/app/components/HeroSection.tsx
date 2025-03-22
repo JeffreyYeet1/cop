@@ -1,29 +1,32 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
-import Link from "next/link";
+import { useEffect, useState, useRef } from "react";
 import Image from "next/image";
-import { Button } from "../components/ui/button";
-import { Input } from "../components/ui/input";
-import { ArrowRight, Check, Calendar, ListTodo, Clock, ChevronDown } from "lucide-react";
+import { ChevronDown } from "lucide-react";
+import Link from "next/link";
 
 const HeroSection = () => {
-  const [mounted, setMounted] = useState(false);
-  const [showScrollButton, setShowScrollButton] = useState(true);
-  
+  const [visibleSection, setVisibleSection] = useState(false);
+  const sectionRef = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
-    setMounted(true);
-    
-    const handleScroll = () => {
-      if (window.scrollY > 100) {
-        setShowScrollButton(false);
-      } else {
-        setShowScrollButton(true);
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) {
+          setVisibleSection(true);
+        }
+      },
+      { 
+        threshold: 0.1,
+        rootMargin: '50px'
       }
-    };
-    
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
+    );
+
+    if (sectionRef.current) {
+      observer.observe(sectionRef.current);
+    }
+
+    return () => observer.disconnect();
   }, []);
 
   const scrollToFeatures = () => {
@@ -34,80 +37,74 @@ const HeroSection = () => {
   };
 
   return (
-    <div className="relative overflow-hidden bg-white min-h-[calc(100vh-4rem)] flex items-center justify-center">
-      {/* Background decorations - subtler */}
-      <div className="absolute top-0 right-0 -translate-y-1/4 translate-x-1/4 blur-3xl opacity-50">
-        <div className="aspect-square h-[40rem] rounded-full bg-[#BCE7FD]/10"></div>
-      </div>
-      <div className="absolute bottom-0 left-0 translate-y-1/4 -translate-x-1/4 blur-3xl opacity-50">
-        <div className="aspect-square h-[30rem] rounded-full bg-[#A594F9]/10"></div>
-      </div>
+    <section 
+      ref={sectionRef} 
+      className="relative min-h-screen flex flex-col justify-center items-center overflow-hidden"
+      style={{ willChange: 'opacity, transform' }}
+    >
+      {/* Animated gradient background */}
+      <div className="animated-gradient-background"></div>
+      
+      {/* Enhanced decorative elements with larger gradients */}
+      <div className="absolute top-0 left-0 w-[800px] h-[800px] bg-[#7EB2FF]/5 rounded-full blur-3xl animate-pulse-slow"></div>
+      <div className="absolute bottom-0 right-0 w-[800px] h-[800px] bg-[#A594F9]/5 rounded-full blur-3xl animate-pulse-slow" style={{ animationDelay: '2s' }}></div>
+      <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-[#BCE7FD]/5 rounded-full blur-3xl animate-pulse-slow" style={{ animationDelay: '4s' }}></div>
 
-      <div className="container mx-auto px-4">
-        <div className="flex flex-col items-center justify-center max-w-3xl mx-auto mt-20">
-          <div className="w-full text-center space-y-12">
-            <div className="space-y-8">
-              <div className="inline-flex items-center gap-2 rounded-full bg-neutral-100 px-5 py-2 text-sm animate-fade-in" style={{ animationDelay: '100ms' }}>
-                <span className="flex h-2 w-2 rounded-full bg-[#7EB2FF]"></span>
-                <span className="font-medium text-[#4A5568] hover-link">Organize your life with ease</span>
-              </div>
-              
-              <div className="flex justify-center gap-3">
-                <h1 className="text-4xl font-bold tracking-tight sm:text-5xl lg:text-6xl inline-block hover-link">Clash of</h1>
-                <h1 className="text-4xl font-bold tracking-tight sm:text-5xl lg:text-6xl inline-block gradient-text animate-explosion" style={{ animationDelay: '300ms' }}>Plans</h1>
-              </div>
-              
-              <p className="text-lg text-[#4A5568] max-w-xl mx-auto no-hover-effect" style={{ lineHeight: '1.7' }}>
-                Your all-in-one productivity solution that helps you organize tasks, manage your time, and achieve your goals with a beautiful, simple interface.
-              </p>
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+        <div className="flex flex-col items-center text-center max-w-4xl mx-auto">
+          {/* Title with enhanced animation */}
+          <div className="flex justify-center mb-8">
+            <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold tracking-tight">
+              <span className="inline-block animate-explosion bg-clip-text text-transparent bg-gradient-to-r from-[#4A5568] to-[#7EB2FF]">
+                Clash of Plans
+              </span>
+            </h1>
+          </div>
+
+          {/* Tagline with improved animation */}
+          <div className="mb-12">
+            <p className="text-xl sm:text-2xl text-[#4A5568] max-w-2xl mx-auto leading-relaxed no-hover-effect">
+              Organize your life with ease
+            </p>
+          </div>
+
+          {/* Feature icons with enhanced layout */}
+          <div className="flex flex-wrap justify-center gap-8 mb-12">
+            <div className="flex items-center gap-2">
+              <div className="h-2 w-2 rounded-full bg-[#7EB2FF]"></div>
+              <span className="text-[#4A5568]">Task Management</span>
             </div>
-
-            <div className="flex flex-wrap justify-center items-center gap-12 animate-fade-in" style={{ animationDelay: '400ms' }}>
-              <div className="flex flex-col items-center group">
-                <div className="rounded-full bg-neutral-100 p-4 mb-3 transition-all duration-500 group-hover:bg-[#BCE7FD]/50 group-hover:shadow-md">
-                  <ListTodo className="h-5 w-5 text-[#7EB2FF]" />
-                </div>
-                <p className="text-sm font-medium text-[#4A5568] feature-card-text">Task Management</p>
-              </div>
-
-              <div className="flex flex-col items-center group">
-                <div className="rounded-full bg-neutral-100 p-4 mb-3 transition-all duration-500 group-hover:bg-[#BCE7FD]/50 group-hover:shadow-md">
-                  <Calendar className="h-5 w-5 text-[#7EB2FF]" />
-                </div>
-                <p className="text-sm font-medium text-[#4A5568] feature-card-text">Calendar Integration</p>
-              </div>
-
-              <div className="flex flex-col items-center group">
-                <div className="rounded-full bg-neutral-100 p-4 mb-3 transition-all duration-500 group-hover:bg-[#BCE7FD]/50 group-hover:shadow-md">
-                  <Clock className="h-5 w-5 text-[#7EB2FF]" />
-                </div>
-                <p className="text-sm font-medium text-[#4A5568] feature-card-text">Time Tracking</p>
-              </div>
+            <div className="flex items-center gap-2">
+              <div className="h-2 w-2 rounded-full bg-[#A594F9]"></div>
+              <span className="text-[#4A5568]">Focus Timers</span>
             </div>
-
-            <div className="flex justify-center items-center animate-fade-in" style={{ animationDelay: '600ms' }}>
-              <Button 
-                size="lg" 
-                className="transition-all duration-500 hover:scale-105 px-10 py-6 bg-gradient-to-r from-[#7EB2FF] to-[#A594F9] text-white border-0 shadow-md hover:shadow-lg text-base" 
-                asChild
-              >
-                <Link href="/signup">Get Started</Link>
-              </Button>
+            <div className="flex items-center gap-2">
+              <div className="h-2 w-2 rounded-full bg-[#BCE7FD]"></div>
+              <span className="text-[#4A5568]">Calendar Sync</span>
             </div>
           </div>
-          
-          {showScrollButton && (
-            <div 
-              className="fixed bottom-6 left-1/2 transform -translate-x-1/2 flex flex-col items-center text-[#4A5568]/70 scroll-down-button cursor-pointer z-10 transition-opacity duration-500"
-              onClick={scrollToFeatures}
-            >
-              <span className="text-sm mb-2">Explore more</span>
-              <ChevronDown className="h-6 w-6 animate-bounce" />
-            </div>
-          )}
+
+          {/* CTA Button with improved hover effect */}
+          <div className="mb-16">
+            <Link href="/signup">
+              <button className="px-8 py-4 bg-gradient-to-r from-[#7EB2FF] to-[#A594F9] text-white rounded-full text-lg font-medium hover-lift hover-bright transition-all duration-1000">
+                Get Started
+              </button>
+            </Link>
+          </div>
+
+          {/* Scroll down indicator with enhanced animation */}
+          <div 
+            className="flex flex-col items-center gap-2 cursor-pointer scroll-down-button"
+            onClick={scrollToFeatures}
+            style={{ willChange: 'transform' }}
+          >
+            <span className="text-sm text-[#4A5568]">Explore more</span>
+            <ChevronDown className="h-6 w-6 text-[#7EB2FF]" />
+          </div>
         </div>
       </div>
-    </div>
+    </section>
   );
 };
 

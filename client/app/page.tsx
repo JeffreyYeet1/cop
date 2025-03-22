@@ -1,17 +1,21 @@
 import Image from "next/image";
-import NavBar from "./components/navbar";
-import HeroSection from "./components/HeroSection";
-import FeaturesSection from "./components/FeatureSection";
-import PopImageSection from "./components/PopImageSection";
+import dynamic from "next/dynamic";
 
+// Dynamic imports
+const NavBar = dynamic(() => import("./components/navbar"), { ssr: true });
+const HeroSection = dynamic(() => import("./components/HeroSection"), { ssr: true });
+const FeaturesSection = dynamic(() => import("./components/FeatureSection"), { ssr: true });
+const PopImageSection = dynamic(() => import("./components/PopImageSection"), { ssr: true });
 
 export default function Home() {
   return (
-    <div>
+    <div className="flex flex-col items-center w-full">
       <NavBar />
-      <HeroSection />
-      <PopImageSection />
-      <FeaturesSection />
+      <main className="w-full">
+        <HeroSection />
+        <PopImageSection />
+        <FeaturesSection />
+      </main>
     </div>
   );
 }

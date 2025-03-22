@@ -12,6 +12,9 @@ const PopImageSection = () => {
     // Fade in effect on load
     setOpacity(1);
 
+    // Fade in effect on load
+    setOpacity(1);
+
     const handleScroll = () => {
       if (!sectionRef.current) return;
 

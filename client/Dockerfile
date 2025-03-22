@@ -1,5 +1,5 @@
 # Build stage
-FROM node:20-alpine AS builder
+FROM node:18-alpine AS builder
 
 WORKDIR /app
 
@@ -16,7 +16,7 @@ COPY . .
 RUN npm run build
 
 # Production stage
-FROM node:20-alpine AS runner
+FROM node:18-alpine AS runner
 
 WORKDIR /app
 
@@ -36,21 +36,20 @@ EXPOSE 3000
 CMD ["node", "server.js"]
 
 # Development stage
-FROM node:20-alpine AS dev
+FROM node:18-alpine
 
 WORKDIR /app
 
 # Copy package files
 COPY package*.json ./
 
-# Install dependencies globally and locally
-RUN npm install -g next
-RUN npm install
+# Install dependencies including Radix UI packages
+RUN npm install @radix-ui/react-checkbox @radix-ui/react-label @radix-ui/react-slot class-variance-authority clsx tailwind-merge lucide-react
 
-# Copy source code
+# Copy the rest of the application
 COPY . .
 
-# Expose the port the app runs on
+# Expose the port
 EXPOSE 3000
 
 # Start the development server
