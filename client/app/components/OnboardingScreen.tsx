@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 
 interface Question {
@@ -88,6 +88,13 @@ const OnboardingScreen = () => {
       setIsSaving(true);
       setError(null);
       
+      // Get the token from localStorage
+      const token = localStorage.getItem('token');
+      if (!token) {
+        router.push('/login');
+        return;
+      }
+      
       // Format the preferences data
       const formattedPreferences = Object.entries(selectedAnswers).map(([questionId, answerId]) => {
         const question = questions.find(q => q.id === parseInt(questionId));
@@ -99,12 +106,6 @@ const OnboardingScreen = () => {
           answerText: option?.text || '',
         };
       });
-      
-      // Get the token from localStorage
-      const token = localStorage.getItem('token');
-      if (!token) {
-        throw new Error('Authentication token not found');
-      }
       
       // Make API call to save to database
       const response = await fetch('http://localhost:8000/onboarding/preferences', {
@@ -120,6 +121,11 @@ const OnboardingScreen = () => {
       
       if (!response.ok) {
         const errorData = await response.json();
+        if (response.status === 401) {
+          // Unauthorized - redirect to login
+          router.push('/login');
+          return;
+        }
         throw new Error(errorData.detail || 'Failed to save preferences');
       }
       
@@ -132,6 +138,56 @@ const OnboardingScreen = () => {
       setIsSaving(false);
     }
   };
+
+  const loadExistingPreferences = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        router.push('/login');
+        return;
+      }
+
+      const response = await fetch('http://localhost:8000/onboarding/preferences', {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        if (response.status === 401) {
+          // Unauthorized - redirect to login
+          router.push('/login');
+          return;
+        }
+        throw new Error(errorData.detail || 'Failed to load preferences');
+      }
+
+      const data = await response.json();
+      
+      // Convert the loaded preferences back to our format
+      if (data.preferences && data.preferences.length > 0) {
+        const loadedAnswers: Record<number, string> = {};
+        data.preferences.forEach((pref: any) => {
+          const question = questions.find(q => q.text === pref.questionText);
+          if (question) {
+            loadedAnswers[question.id] = pref.answerId;
+          }
+        });
+        setSelectedAnswers(loadedAnswers);
+        setCompleted(true);
+      }
+    } catch (err) {
+      console.error('Error loading preferences:', err);
+      // Don't show error to user, just proceed with onboarding
+    }
+  };
+
+  // Load existing preferences when component mounts
+  useEffect(() => {
+    loadExistingPreferences();
+  }, []);
 
   // Show completion screen if all questions are answered
   if (completed) {

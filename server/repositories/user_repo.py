@@ -14,7 +14,6 @@ def get_user(db, username: str) -> Optional[UserInDB]:
             user_data.setdefault('name', '')
             user_data.setdefault('email', username)
             user_data.setdefault('created_at', None)
-            user_data.setdefault('disabled', False)
             # Convert password to hashed_password
             user_data['hashed_password'] = user_data.pop('password', None)
             return UserInDB(**user_data)
