@@ -71,3 +71,19 @@
     @apply absolute inset-0 rounded-lg bg-gradient-to-r from-[hsl(var(--primary)/0.2)] to-[hsl(var(--primary)/0.05)] -z-10;
   }
 }
+
+.onboarding-card {
+  box-shadow: 0px 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.option-button {
+  border-radius: 12px;
+}
+
+.active-dot {
+  width: 24px;
+}
+
+.continue-button {
+  background-color: #4C8DFF;
+}

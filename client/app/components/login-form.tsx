@@ -84,7 +84,7 @@ export function LoginForm() {
         console.log('Token stored in localStorage');
         
         // Redirect to dashboard or home page
-        router.push('/dashboard');
+        router.push('/onboarding');
       } catch (error) {
         console.error('Error:', error);
         alert(error instanceof Error ? error.message : 'Failed to login');
