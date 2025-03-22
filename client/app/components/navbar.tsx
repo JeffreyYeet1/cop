@@ -78,14 +78,14 @@ const NavBar = () => {
         ? "bg-white supports-[backdrop-filter]:bg-white/90 shadow-sm border-neutral-100" 
         : "bg-transparent border-transparent"
     }`}>
-      <div className="container mx-auto flex h-16 items-center justify-between px-4 sm:px-6 lg:px-8 ">
-        <div className="flex items-center gap-8">
+      <div className="container mx-auto flex h-16 items-center justify-between px-4 sm:px-6 lg:px-8">
+        <div className="flex items-center gap-8 translate-y-2">
           {/* Logo */}
           <Link href="/" className="flex items-center space-x-2 transition-all duration-500 hover:scale-105 animate-fade-in group">
-            <div className="bg-gradient-to-r from-[#FF6B35] to-[#FF9F1C] rounded-md p-1 flex items-center justify-center h-8 w-auto px-2 transform transition-transform group-hover:rotate-6">
+            <div className="bg-gradient-to-r from-[#7EB2FF] to-[#A594F9] rounded-md p-1 flex items-center justify-center h-8 w-auto px-2 transform transition-transform group-hover:rotate-6">
               <span className="text-white font-bold">COP</span>
             </div>
-            <span className=" font-bold text-xl tracking-tight gradient-text hover-link">Clash of Plans</span>
+            <span className="font-bold text-xl tracking-tight gradient-text hover-link">Clash of Plans</span>
           </Link>
 
           {/* Desktop Navigation */}
@@ -94,7 +94,7 @@ const NavBar = () => {
               <Link 
                 key={index}
                 href={item.href} 
-                className="text-sm font-medium text-[#734F35] hover-link"
+                className="text-sm font-medium text-[#4A5568] hover-link"
               >
                 {item.title}
               </Link>
@@ -104,21 +104,21 @@ const NavBar = () => {
 
         {/* Auth Buttons */}
         <div className="hidden md:flex items-center gap-4">
-          <div className="flex items-center justify-center translate-y-4">
+          <div className="flex items-center justify-center translate-y-2">
             <Button 
               variant="ghost" 
               size="sm" 
-              className="text-[#734F35] hover:text-[#FF6B35] transition-all duration-500 hover:bg-[#FFECCC]/50 animate-fade-in h-9 px-4" 
+              className="text-[#4A5568] hover:text-[#7EB2FF] transition-all duration-500 hover:bg-[#BCE7FD]/20 animate-fade-in h-9 px-4" 
               style={{ animationDelay: '200ms' }} 
               asChild
             >
               <Link href="/login" className="flex items-center">Log in</Link>
             </Button>
           </div>
-          <div className="flex items-center justify-center translate-y-4">
+          <div className="flex items-center justify-center translate-y-2">
             <Button 
               size="sm" 
-              className="bg-gradient-to-r from-[#FF6B35] to-[#FF9F1C] text-white border-0 shadow-sm transition-all duration-500 hover:shadow-md hover:scale-105 animate-fade-in h-9 px-4" 
+              className="bg-gradient-to-r from-[#7EB2FF] to-[#A594F9] text-white border-0 shadow-sm transition-all duration-500 hover:shadow-md hover:scale-105 animate-fade-in h-9 px-4" 
               style={{ animationDelay: '300ms' }} 
               asChild
             >
@@ -130,16 +130,16 @@ const NavBar = () => {
         {/* Mobile Menu Button */}
         <Sheet open={isOpen} onOpenChange={setIsOpen}>
           <SheetTrigger asChild>
-            <Button variant="ghost" size="icon" className="md:hidden animate-fade-in text-[#734F35] hover:bg-[#FFECCC]/50">
+            <Button variant="ghost" size="icon" className="md:hidden animate-fade-in text-[#4A5568] hover:bg-[#BCE7FD]/20 translate-y-2">
               <Menu className="h-6 w-6" />
               <span className="sr-only">Toggle menu</span>
             </Button>
           </SheetTrigger>
           <SheetContent side="right" className="bg-white border-l border-neutral-100">
             <SheetHeader>
-              <SheetTitle className="text-[#734F35]">
+              <SheetTitle className="text-[#4A5568]">
                 <div className="flex items-center gap-2">
-                  <div className="bg-gradient-to-r from-[#FF6B35] to-[#FF9F1C] rounded-md p-1 flex items-center justify-center h-8 w-auto px-2">
+                  <div className="bg-gradient-to-r from-[#7EB2FF] to-[#A594F9] rounded-md p-1 flex items-center justify-center h-8 w-auto px-2">
                     <span className="text-white font-bold">COP</span>
                   </div>
                   <span className="font-bold text-xl tracking-tight gradient-text">Clash of Plans</span>
@@ -149,12 +149,12 @@ const NavBar = () => {
             <div className="mt-8 flex flex-col gap-6">
               {/* Mobile Navigation */}
               <div className="flex flex-col gap-4">
-                <h3 className="text-sm font-medium text-[#734F35]/70">Navigation</h3>
+                <h3 className="text-sm font-medium text-[#4A5568]/70">Navigation</h3>
                 {navItems.map((item, index) => (
                   <Link
                     key={index}
                     href={item.href}
-                    className="text-sm text-[#734F35] flex items-center gap-2 hover:text-[#FF6B35] transition-colors hover-link"
+                    className="text-sm text-[#4A5568] flex items-center gap-2 hover:text-[#7EB2FF] transition-colors hover-link"
                     onClick={() => setIsOpen(false)}
                   >
                     {item.icon && <item.icon className="h-4 w-4" />}
@@ -166,13 +166,13 @@ const NavBar = () => {
               <div className="flex flex-col gap-2 mt-auto">
                 <Button 
                   variant="outline" 
-                  className="w-full justify-start border-neutral-100 text-[#734F35] hover:bg-[#FFECCC]/30 transition-colors"  
+                  className="w-full justify-start border-neutral-100 text-[#4A5568] hover:bg-[#BCE7FD]/20 transition-colors"  
                   asChild
                 >
                   <Link href="/login" onClick={() => setIsOpen(false)}>Log in</Link>
                 </Button>
                 <Button 
-                  className="w-full justify-start bg-gradient-to-r from-[#FF6B35] to-[#FF9F1C] text-white border-0 transition-all hover:shadow-md" 
+                  className="w-full justify-start bg-gradient-to-r from-[#7EB2FF] to-[#A594F9] text-white border-0 transition-all hover:shadow-md" 
                   asChild
                 >
                   <Link href="/signup" onClick={() => setIsOpen(false)}>Sign up</Link>
