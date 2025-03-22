@@ -1,0 +1,30 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider             = "prisma-client-py"
+  recursive_type_depth = -1
+}
+
+model User {
+  id             String           @id @default(uuid())
+  email          String           @unique
+  name           String?
+  hashedPassword String           @map("hashed_password")
+  disabled       Boolean          @default(false)
+  createdAt      DateTime         @default(now()) @map("created_at")
+  onboarding     OnboardingAnswer?
+
+  @@map("users")
+}
+
+model OnboardingAnswer {
+  userId    String   @id @map("user_id")
+  answers   String[]
+  createdAt DateTime @default(now()) @map("created_at")
+  user      User     @relation(fields: [userId], references: [id])
+
+  @@map("onboarding_answers")
+} 
