@@ -19,6 +19,11 @@ const config = {
     },
     extend: {
       colors: {
+        'apple-blue': '#007AFF',
+        'apple-red': '#FF3B30',
+        'apple-gray-1': '#8E8E93',
+        'apple-gray-5': '#E5E5EA',
+        'apple-gray-6': '#F2F2F7',
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",

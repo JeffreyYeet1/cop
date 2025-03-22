@@ -45,54 +45,61 @@ export function LoginForm() {
     return isValid;
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (validateForm()) {
-      setIsLoading(true);
-      try {
-        const formDataToSend = new URLSearchParams();
-        formDataToSend.append('username', formData.email); // Send email as username
-        formDataToSend.append('password', formData.password);
-        
-        console.log('Sending request with data:', {
-          email: formData.email,
-          password: '[REDACTED]'
-        });
-        
-        const response = await fetch('http://localhost:8000/token', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
-            'Accept': 'application/json',
-          },
-          body: formDataToSend,
-        });
+const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
+  
+  if (validateForm()) {
+    setIsLoading(true);
+    try {
+      const formDataToSend = new URLSearchParams();
+      formDataToSend.append('username', formData.email); // Send email as username
+      formDataToSend.append('password', formData.password);
+      
+      console.log('Sending request with data:', {
+        email: formData.email,
+        password: '[REDACTED]'
+      });
+      
+      const response = await fetch('http://localhost:8000/token', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+          'Accept': 'application/json',
+        },
+        body: formDataToSend,
+      });
 
-        console.log('Response status:', response.status);
-        console.log('Response headers:', Object.fromEntries(response.headers.entries()));
-        
-        const data = await response.json();
-        console.log('Response data:', data);
-        
-        if (!response.ok) {
-          throw new Error(data.detail || 'Failed to login');
-        }
-
-        // Store the token
-        localStorage.setItem('token', data.access_token);
-        console.log('Token stored in localStorage');
-        
-        // Redirect to dashboard or home page
-        router.push('/dashboard');
-      } catch (error) {
-        console.error('Error:', error);
-        alert(error instanceof Error ? error.message : 'Failed to login');
-      } finally {
-        setIsLoading(false);
+      console.log('Response status:', response.status);
+      console.log('Response headers:', Object.fromEntries(response.headers.entries()));
+      
+      const data = await response.json();
+      console.log('Response data:', data);
+      
+      if (!response.ok) {
+        throw new Error(data.detail || 'Failed to login');
       }
+
+      // Store the token
+      localStorage.setItem('token', data.access_token);
+      console.log('Token stored in localStorage');
+      
+      // Check if user has completed onboarding
+      const hasCompletedOnboarding = localStorage.getItem('userPreferences');
+      
+      // Redirect to onboarding or dashboard based on whether onboarding is completed
+      if (hasCompletedOnboarding) {
+        router.push('/dashboard');
+      } else {
+        router.push('/onboarding');
+      }
+    } catch (error) {
+      console.error('Error:', error);
+      alert(error instanceof Error ? error.message : 'Failed to login');
+    } finally {
+      setIsLoading(false);
     }
-  };
+  }
+};
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
