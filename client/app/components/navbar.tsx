@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { Button } from "./ui/button";
@@ -34,13 +34,34 @@ type NavItem = {
 
 const NavBar = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+    
+    const handleScroll = () => {
+      if (window.scrollY > 10) {
+        setScrolled(true);
+      } else {
+        setScrolled(false);
+      }
+    };
+
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="container flex h-16 items-center justify-between">
+    <header className={`sticky top-0 z-50 w-full border-b backdrop-blur transition-all duration-300 ${
+      scrolled 
+        ? "bg-background/95 supports-[backdrop-filter]:bg-background/60 shadow-sm" 
+        : "bg-background/50 supports-[backdrop-filter]:bg-background/20"
+    }`}>
+      <div className="container mx-auto flex h-16 items-center justify-between px-4 sm:px-6 lg:px-8 transition-opacity duration-500" style={{ opacity: mounted ? 1 : 0 }}>
         <div className="flex items-center gap-8">
           {/* Logo */}
-          <Link href="/" className="flex items-center space-x-2">
+          <Link href="/" className="flex items-center space-x-2 transition-transform duration-200 hover:scale-105">
             <div className="bg-primary rounded-md p-1 flex items-center justify-center h-8 w-8">
               <span className="text-primary-foreground font-bold">AX</span>
             </div>
@@ -49,18 +70,19 @@ const NavBar = () => {
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex gap-6 items-center">
-            <Link href="/about" className="text-sm font-medium transition-colors hover:text-primary">
+            <Link href="/about" className="text-sm font-medium transition-colors hover:text-primary relative group">
               About
+              <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-primary transition-all duration-300 group-hover:w-full"></span>
             </Link>
           </nav>
         </div>
 
         {/* Auth Buttons */}
         <div className="hidden md:flex items-center gap-4">
-          <Button variant="ghost" size="sm" asChild>
+          <Button variant="ghost" size="sm" className="transition-colors hover:bg-primary/10" asChild>
             <Link href="/login">Log in</Link>
           </Button>
-          <Button size="sm" asChild>
+          <Button size="sm" className="transition-transform hover:scale-105" asChild>
             <Link href="/signup">Sign up</Link>
           </Button>
         </div>
@@ -90,7 +112,7 @@ const NavBar = () => {
                 <h3 className="text-sm font-medium text-muted-foreground">Navigation</h3>
                 <Link
                   href="/about"
-                  className="text-sm"
+                  className="text-sm transition-colors hover:text-primary"
                   onClick={() => setIsOpen(false)}
                 >
                   About
@@ -98,10 +120,10 @@ const NavBar = () => {
               </div>
 
               <div className="flex flex-col gap-2 mt-auto">
-                <Button variant="outline" className="w-full justify-start" asChild>
+                <Button variant="outline" className="w-full justify-start transition-colors hover:bg-primary/10" asChild>
                   <Link href="/login" onClick={() => setIsOpen(false)}>Log in</Link>
                 </Button>
-                <Button className="w-full justify-start" asChild>
+                <Button className="w-full justify-start transition-transform hover:scale-105" asChild>
                   <Link href="/signup" onClick={() => setIsOpen(false)}>Sign up</Link>
                 </Button>
               </div>

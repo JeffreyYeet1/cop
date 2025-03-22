@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState, useRef } from "react";
 import Image from "next/image";
 import {
   Zap,
@@ -50,27 +51,62 @@ const features: Feature[] = [
 ];
 
 const FeaturesSection = () => {
+  const [mounted, setMounted] = useState(false);
+  const sectionRef = useRef<HTMLDivElement>(null);
+  const [visibleItems, setVisibleItems] = useState<number[]>([]);
+
+  useEffect(() => {
+    setMounted(true);
+    
+    const handleScroll = () => {
+      if (!sectionRef.current) return;
+      
+      const rect = sectionRef.current.getBoundingClientRect();
+      if (rect.top < window.innerHeight - 100 && rect.bottom > 0) {
+        // When section is in view, gradually show items
+        const newVisibleItems = [...visibleItems];
+        for (let i = 0; i < features.length; i++) {
+          if (!newVisibleItems.includes(i)) {
+            setTimeout(() => {
+              setVisibleItems(prev => [...prev, i]);
+            }, i * 150);
+          }
+        }
+      }
+    };
+    
+    window.addEventListener('scroll', handleScroll);
+    handleScroll(); // Check on mount
+    
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [visibleItems.length]);
+
   return (
-    <section className="py-24 bg-muted/20">
-      <div className="container">
-        <div className="flex flex-col items-center text-center mb-16 max-w-3xl mx-auto">
+    <section ref={sectionRef} className="py-24 bg-muted/20">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex flex-col items-center text-center mb-16 max-w-3xl mx-auto transition-opacity duration-500" style={{ opacity: mounted ? 1 : 0 }}>
           <div className="inline-flex items-center justify-center rounded-full bg-primary/10 px-3 py-1 text-sm font-medium text-primary mb-4">
             Features
           </div>
           <h2 className="text-3xl font-bold tracking-tight sm:text-4xl mb-5">
             Everything you need to succeed
           </h2>
-          <p className="text-muted-foreground">
+          <p className="text-muted-foreground max-w-2xl mx-auto">
             Our platform provides all the tools and features you need to build,
             launch, and grow your business, all in one place.
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
           {features.map((feature, index) => (
             <div
               key={index}
-              className="relative overflow-hidden rounded-lg border bg-background p-6 transition-all hover:shadow-md"
+              className="relative overflow-hidden rounded-lg border bg-background p-6 transition-all hover:shadow-md transform hover:-translate-y-1 duration-300"
+              style={{ 
+                opacity: visibleItems.includes(index) ? 1 : 0,
+                transform: `translateY(${visibleItems.includes(index) ? '0' : '20px'})`,
+                transition: 'opacity 0.5s ease, transform 0.5s ease'
+              }}
             >
               <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-primary">
                 {feature.icon}
@@ -90,7 +126,10 @@ const FeaturesSection = () => {
           ))}
         </div>
 
-        <div className="mt-16 rounded-2xl bg-muted/50 border p-8 lg:p-10">
+        <div className="mt-16 rounded-2xl bg-muted/50 border p-8 lg:p-10 max-w-6xl mx-auto transition-opacity duration-500" style={{ 
+          opacity: mounted ? 1 : 0,
+          transitionDelay: '300ms'
+        }}>
           <div className="grid gap-8 md:grid-cols-2 lg:gap-12">
             <div>
               <h3 className="text-2xl font-bold mb-3">Why choose our platform?</h3>
