@@ -52,11 +52,12 @@ export function LoginForm() {
       setIsLoading(true);
       try {
         const formDataToSend = new URLSearchParams();
-        formDataToSend.append('username', formData.email); // Send email as username
+        formDataToSend.append('username', formData.email.toLowerCase()); // Send lowercase email as username
         formDataToSend.append('password', formData.password);
+        formDataToSend.append('scope', 'me items'); // Add required scopes
         
         console.log('Sending request with data:', {
-          email: formData.email,
+          email: formData.email.toLowerCase(),
           password: '[REDACTED]'
         });
         
@@ -70,20 +71,23 @@ export function LoginForm() {
         });
 
         console.log('Response status:', response.status);
-        console.log('Response headers:', Object.fromEntries(response.headers.entries()));
         
         const data = await response.json();
         console.log('Response data:', data);
         
         if (!response.ok) {
-          throw new Error(data.detail || 'Failed to login');
+          if (data.detail === "Incorrect email or password") {
+            throw new Error("Invalid email or password. Please try again.");
+          } else {
+            throw new Error(data.detail || 'Failed to login');
+          }
         }
 
         // Store the actual token from the server
         localStorage.setItem('token', data.access_token);
         console.log('Token stored in localStorage');
         
-        // Redirect to dashboard or home page
+        // Redirect to onboarding
         router.push('/onboarding');
       } catch (error) {
         console.error('Error:', error);

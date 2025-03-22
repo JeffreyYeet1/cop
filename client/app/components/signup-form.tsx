@@ -89,7 +89,7 @@ export function SignUpForm() {
           password: '[REDACTED]'
         });
         
-        const response = await fetch('http://localhost:8000/user', {
+        const response = await fetch('http://localhost:8000/users', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -105,15 +105,31 @@ export function SignUpForm() {
         console.log('Response data:', data);
         
         if (!response.ok) {
-          throw new Error(data.message || 'Failed to create account');
+          // Handle specific error messages from the server
+          if (data.detail) {
+            throw new Error(data.detail);
+          } else if (data.message) {
+            throw new Error(data.message);
+          } else {
+            throw new Error('Failed to create account');
+          }
         }
 
-        alert(data.message || "Account created successfully! Please login.");
-        // router.push('/onboarding'); // Redirect to onboarding page whatever its called
+        // Show success message
+        alert("Account created successfully! Please login.");
         router.push('/login');
       } catch (error) {
         console.error('Error:', error);
-        alert(error instanceof Error ? error.message : 'Failed to create account');
+        // Show user-friendly error message
+        if (error instanceof Error) {
+          if (error.message.includes("User already exists")) {
+            alert("An account with this email already exists. Please login instead.");
+          } else {
+            alert(error.message);
+          }
+        } else {
+          alert('An unexpected error occurred. Please try again.');
+        }
       } finally {
         setIsLoading(false);
       }
