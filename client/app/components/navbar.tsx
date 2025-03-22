@@ -104,25 +104,25 @@ const NavBar = () => {
 
         {/* Auth Buttons */}
         <div className="hidden md:flex items-center gap-4">
-          <div className="flex items-center justify-center translate-y-2">
+          <div className="flex items-center justify-center translate-y-4">
             <Button 
               variant="ghost" 
               size="sm" 
-              className="text-[#734F35] hover:text-[#FF6B35] transition-all duration-500 hover:bg-[#FFECCC]/50 animate-fade-in hover-link" 
+              className="text-[#734F35] hover:text-[#FF6B35] transition-all duration-500 hover:bg-[#FFECCC]/50 animate-fade-in h-9 px-4" 
               style={{ animationDelay: '200ms' }} 
               asChild
             >
-              <Link href="/login">Log in</Link>
+              <Link href="/login" className="flex items-center">Log in</Link>
             </Button>
           </div>
-          <div className="flex items-center justify-center translate-y-2">
+          <div className="flex items-center justify-center translate-y-4">
             <Button 
               size="sm" 
-              className="bg-gradient-to-r from-[#FF6B35] to-[#FF9F1C] text-white border-0 shadow-sm transition-all duration-500 hover:shadow-md hover:scale-105 animate-fade-in" 
+              className="bg-gradient-to-r from-[#FF6B35] to-[#FF9F1C] text-white border-0 shadow-sm transition-all duration-500 hover:shadow-md hover:scale-105 animate-fade-in h-9 px-4" 
               style={{ animationDelay: '300ms' }} 
               asChild
             >
-              <Link href="/signup">Sign up</Link>
+              <Link href="/signup" className="flex items-center">Sign up</Link>
             </Button>
           </div>
         </div>
