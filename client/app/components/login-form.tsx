@@ -5,8 +5,10 @@ import Link from "next/link";
 import { Button } from "./ui2/button";
 import { Input } from "./ui2/input";
 import { Card, CardContent, CardFooter } from "./ui2/card";
+import { useRouter } from "next/navigation";
 
 export function LoginForm() {
+  const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
     email: "",
@@ -19,7 +21,10 @@ export function LoginForm() {
 
   const validateForm = () => {
     let isValid = true;
-    const newErrors = { email: "", password: "" };
+    const newErrors = {
+      email: "",
+      password: "",
+    };
 
     // Email validation
     if (!formData.email) {
@@ -34,29 +39,58 @@ export function LoginForm() {
     if (!formData.password) {
       newErrors.password = "Password is required";
       isValid = false;
-    } else if (formData.password.length < 8) {
-      newErrors.password = "Password must be at least 8 characters";
-      isValid = false;
     }
 
     setErrors(newErrors);
     return isValid;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (validateForm()) {
       setIsLoading(true);
-      // In a real app, you would send a request to your authentication server here
-      console.log(formData);
+      try {
+        const formDataToSend = new URLSearchParams();
+        formDataToSend.append('username', formData.email); // Send email as username
+        formDataToSend.append('password', formData.password);
+        
+        console.log('Sending request with data:', {
+          email: formData.email,
+          password: '[REDACTED]'
+        });
+        
+        const response = await fetch('http://localhost:8000/token', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'Accept': 'application/json',
+          },
+          body: formDataToSend,
+        });
 
-      // Simulate API call
-      setTimeout(() => {
+        console.log('Response status:', response.status);
+        console.log('Response headers:', Object.fromEntries(response.headers.entries()));
+        
+        const data = await response.json();
+        console.log('Response data:', data);
+        
+        if (!response.ok) {
+          throw new Error(data.detail || 'Failed to login');
+        }
+
+        // Store the token
+        localStorage.setItem('token', data.access_token);
+        console.log('Token stored in localStorage');
+        
+        // Redirect to dashboard or home page
+        router.push('/dashboard');
+      } catch (error) {
+        console.error('Error:', error);
+        alert(error instanceof Error ? error.message : 'Failed to login');
+      } finally {
         setIsLoading(false);
-        // Redirect to dashboard or show success message
-        alert("Login successful!");
-      }, 1000);
+      }
     }
   };
 
@@ -115,29 +149,16 @@ export function LoginForm() {
             )}
           </div>
 
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-2">
-              <input
-                type="checkbox"
-                id="remember"
-                className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
-              />
-              <label htmlFor="remember" className="text-sm text-muted-foreground">
-                Remember me
-              </label>
-            </div>
-            <Link href="/forgot-password" className="text-sm text-primary hover:underline">
-              Forgot password?
-            </Link>
+          <div className="pt-2">
+            <Button type="submit" className="w-full" disabled={isLoading}>
+              {isLoading ? "Logging in..." : "Login"}
+            </Button>
           </div>
-          <Button type="submit" className="w-full" disabled={isLoading}>
-            {isLoading ? "Logging in..." : "Login"}
-          </Button>
         </form>
       </CardContent>
       <CardFooter className="flex justify-center border-t p-4">
         <p className="text-sm text-muted-foreground">
-          Don&apos;t have an account?{" "}
+          Don't have an account?{" "}
           <Link href="/signup" className="text-primary hover:underline">
             Sign up
           </Link>

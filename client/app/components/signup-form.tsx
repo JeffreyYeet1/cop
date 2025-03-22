@@ -5,8 +5,10 @@ import Link from "next/link";
 import { Button } from "./ui2/button";
 import { Input } from "./ui2/input";
 import { Card, CardContent, CardFooter } from "./ui2/card";
+import { useRouter } from "next/navigation";
 
 export function SignUpForm() {
+  const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
@@ -70,20 +72,51 @@ export function SignUpForm() {
     return isValid;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (validateForm()) {
       setIsLoading(true);
-      // In a real app, you would send a request to your authentication server here
-      console.log(formData);
+      try {
+        const requestData = {
+          name: formData.name,
+          email: formData.email,
+          password: formData.password,
+        };
+        
+        console.log('Sending request with data:', {
+          ...requestData,
+          password: '[REDACTED]'
+        });
+        
+        const response = await fetch('http://localhost:8000/user', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+          },
+          body: JSON.stringify(requestData),
+        });
 
-      // Simulate API call
-      setTimeout(() => {
+        console.log('Response status:', response.status);
+        console.log('Response headers:', Object.fromEntries(response.headers.entries()));
+        
+        const data = await response.json();
+        console.log('Response data:', data);
+        
+        if (!response.ok) {
+          throw new Error(data.message || 'Failed to create account');
+        }
+
+        alert(data.message || "Account created successfully! Please login.");
+        // router.push('/onboarding'); // Redirect to onboarding page whatever its called
+        router.push('/login');
+      } catch (error) {
+        console.error('Error:', error);
+        alert(error instanceof Error ? error.message : 'Failed to create account');
+      } finally {
         setIsLoading(false);
-        // Redirect to login or show success message
-        alert("Account created successfully! Please login.");
-      }, 1000);
+      }
     }
   };
 

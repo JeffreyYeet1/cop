@@ -16,6 +16,7 @@ from fastapi.security import (
 from jwt.exceptions import InvalidTokenError
 from passlib.context import CryptContext
 from pydantic import BaseModel, ValidationError
+from fastapi.middleware.cors import CORSMiddleware
 
 # to get a string like this run:
 # openssl rand -hex 32
@@ -41,7 +42,7 @@ class User(BaseModel):
 
 
 class UserInDB(User):
-    hashed_password: str
+    hashed_password: str | None = None
 
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -54,6 +55,35 @@ oauth2_scheme = OAuth2PasswordBearer(
 app = FastAPI()
 supabase = create_supabase_client()
 
+# Add CORS middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000"],  # Your frontend URL
+    allow_credentials=False,  # We're not using cookies
+    allow_methods=["*"],  # Allows all methods
+    allow_headers=["*"],  # Allows all headers
+    expose_headers=["*"],  # Exposes all headers
+    max_age=3600,  # Cache preflight requests for 1 hour
+)
+
+# Add request logging middleware
+@app.middleware("http")
+async def log_requests(request, call_next):
+    print(f"\n=== New Request ===")
+    print(f"Method: {request.method}")
+    print(f"URL: {request.url}")
+    print(f"Headers: {dict(request.headers)}")
+    try:
+        response = await call_next(request)
+        print(f"Response status: {response.status_code}")
+        return response
+    except Exception as e:
+        print(f"Error processing request: {str(e)}")
+        print(f"Error type: {type(e)}")
+        import traceback
+        print(f"Traceback: {traceback.format_exc()}")
+        raise
+
 def verify_password(plain_password, hashed_password):
     return pwd_context.verify(plain_password, hashed_password)
 
@@ -65,7 +95,10 @@ def get_password_hash(password):
 def get_user(db, username: str):
     user = db.from_("users").select("*").eq("email", username).execute()
     if user.data:
-        return UserInDB(**user.data[0])
+        # Convert the password field to hashed_password for the model
+        user_data = user.data[0]
+        user_data['hashed_password'] = user_data.pop('password', None)
+        return UserInDB(**user_data)
     return None
 
 
@@ -144,15 +177,28 @@ async def root():
 async def login_for_access_token(
     form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
 ) -> Token:
-    user = authenticate_user(supabase, form_data.username, form_data.password)
-    if not user:
-        raise HTTPException(status_code=400, detail="Incorrect username or password")
-    access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
-    access_token = create_access_token(
-        data={"sub": user.username, "scopes": form_data.scopes},
-        expires_delta=access_token_expires,
-    )
-    return Token(access_token=access_token, token_type="bearer")
+    try:
+        print(f"Login attempt for email: {form_data.username}")
+        # Convert form_data.username to email since we're using email for authentication
+        user = authenticate_user(supabase, form_data.username, form_data.password)
+        if not user:
+            print("Authentication failed: Invalid credentials")
+            raise HTTPException(status_code=400, detail="Incorrect email or password")
+        
+        print("Authentication successful, creating token")
+        access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+        access_token = create_access_token(
+            data={"sub": user.email, "scopes": form_data.scopes},
+            expires_delta=access_token_expires,
+        )
+        print("Token created successfully")
+        return Token(access_token=access_token, token_type="bearer")
+    except Exception as e:
+        print(f"Error during login: {str(e)}")
+        print(f"Error type: {type(e)}")
+        import traceback
+        print(f"Traceback: {traceback.format_exc()}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @app.get("/users/me/", response_model=User)
@@ -186,32 +232,35 @@ def create_user(user: User):
             return {"message": "User already exists"}
         print("User does not exist, proceeding with creation")
 
-        # Sign up user using Supabase Auth
-        print("Attempting to sign up user...")
-        auth_response = supabase.auth.sign_up({
-            "email": user_email,
-            "password": user.password,
-            "options": {
-                "data": {
-                    "name": user.name
-                }
-            }
-        })
-        print(f"Auth response: {auth_response}")
+        # Hash the password
+        hashed_password = get_password_hash(user.password)
+        print("Password hashed successfully")
 
-        if auth_response.user:
+        # Create user directly in the public users table
+        print("Creating user in public table...")
+        user_data = {
+            "email": user_email,
+            "name": user.name,
+            "password": hashed_password,
+            "created_at": datetime.now(timezone.utc).isoformat()
+        }
+        
+        insert_response = supabase.from_("users").insert(user_data).execute()
+        print(f"Insert response: {insert_response}")
+        
+        if insert_response.data:
             print("User created successfully")
             return {
                 "message": "User created successfully",
                 "user": {
-                    "id": auth_response.user.id,
-                    "email": auth_response.user.email,
+                    "email": user_email,
                     "name": user.name
                 }
             }
         else:
-            print("User creation failed - no user returned")
-            return {"message": "User creation failed - no user returned"}
+            print("Failed to create user record")
+            return {"message": "Failed to create user record"}
+            
     except Exception as e:
         print(f"Error during user creation: {str(e)}")
         print(f"Error type: {type(e)}")

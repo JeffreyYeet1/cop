@@ -8,7 +8,12 @@ import {
   Calendar,
   Bell,
   Target,
-  Users
+  Users,
+  Zap,
+  LineChart,
+  Shield,
+  Workflow,
+  ArrowUp
 } from "lucide-react";
 
 type Feature = {
@@ -47,6 +52,11 @@ const features: Feature[] = [
     title: "Team Collaboration",
     description: "Share projects, assign tasks, and collaborate seamlessly with teammates in real-time.",
     icon: <Users className="h-5 w-5" />
+  },
+  {
+    title: "Scalable Architecture",
+    description: "As your business grows, our platform grows with you, handling increasing loads with ease.",
+    icon: <ArrowUp className="h-5 w-5" />
   }
 ];
 
