@@ -1,22 +1,143 @@
 "use client";
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import TaskCard from './TaskCard';
 import { Plus, X, Loader2 } from 'lucide-react';
 import { todoService } from '../services/todoService';
 import { Task, Priority } from '../types';
 
-const DailyTasks = () => {
-  const [todos, setTodos] = useState<Task[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [showNewTaskModal, setShowNewTaskModal] = useState(false);
+const NewTaskModal: React.FC<{
+  isOpen: boolean;
+  onClose: () => void;
+  onSubmit: (task: { title: string; description: string; priority: Priority; estimated_duration: number }) => void;
+}> = ({ isOpen, onClose, onSubmit }) => {
   const [newTask, setNewTask] = useState({
     title: '',
     description: '',
     priority: 'low' as Priority,
     estimated_duration: 30
   });
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+    return () => setMounted(false);
+  }, []);
+
+  if (!isOpen || !mounted) return null;
+
+  const modalRoot = document.getElementById('modal-root');
+  if (!modalRoot) return null;
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    onSubmit(newTask);
+    setNewTask({
+      title: '',
+      description: '',
+      priority: 'low',
+      estimated_duration: 30
+    });
+    onClose();
+  };
+
+  return createPortal(
+    <div className="fixed inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center animate-fadeIn">
+      <div 
+        className="bg-white/80 backdrop-blur-sm rounded-3xl p-8 w-full max-w-md shadow-xl transform transition-all duration-300 animate-scaleUp"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex justify-between items-center mb-6">
+          <h3 className="text-xl font-semibold text-gray-900">Create New Task</h3>
+          <button
+            onClick={onClose}
+            className="text-gray-400 hover:text-gray-600 transition-all duration-300"
+          >
+            <X size={20} />
+          </button>
+        </div>
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Title
+            </label>
+            <input
+              type="text"
+              value={newTask.title}
+              onChange={(e) => setNewTask({ ...newTask, title: e.target.value })}
+              className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-500/50 transition-all duration-200"
+              placeholder="Enter task title"
+              required
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Description
+            </label>
+            <textarea
+              value={newTask.description}
+              onChange={(e) => setNewTask({ ...newTask, description: e.target.value })}
+              className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-500/50 transition-all duration-200"
+              placeholder="Enter task description"
+              rows={3}
+            />
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Priority
+              </label>
+              <select
+                value={newTask.priority}
+                onChange={(e) => setNewTask({ ...newTask, priority: e.target.value as Priority })}
+                className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-500/50 transition-all duration-200"
+              >
+                <option value="low">Low</option>
+                <option value="medium">Medium</option>
+                <option value="high">High</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Duration (min)
+              </label>
+              <input
+                type="number"
+                value={newTask.estimated_duration}
+                onChange={(e) => setNewTask({ ...newTask, estimated_duration: parseInt(e.target.value) })}
+                className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-500/50 transition-all duration-200"
+                min="1"
+              />
+            </div>
+          </div>
+          <div className="flex justify-end gap-3 pt-4">
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-6 py-2.5 text-gray-600 hover:text-gray-900 bg-gray-50 hover:bg-gray-100 rounded-xl transition-all duration-200"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              className="px-6 py-2.5 bg-sky-500 text-white rounded-xl hover:bg-sky-600 transition-all duration-200"
+            >
+              Create Task
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>,
+    modalRoot
+  );
+};
+
+const DailyTasks = () => {
+  const [todos, setTodos] = useState<Task[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [showNewTaskModal, setShowNewTaskModal] = useState(false);
 
   const date = new Date();
   const dayName = date.toLocaleString('en-US', { weekday: 'long' });
@@ -38,18 +159,11 @@ const DailyTasks = () => {
     fetchTodos();
   }, []);
 
-  const handleAddTodo = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleAddTodo = async (taskData: { title: string; description: string; priority: Priority; estimated_duration: number }) => {
     try {
-      const newTodo = await todoService.createTodo(newTask);
+      const newTodo = await todoService.createTodo(taskData);
       setTodos([...todos, newTodo]);
       setShowNewTaskModal(false);
-      setNewTask({
-        title: '',
-        description: '',
-        priority: 'low',
-        estimated_duration: 30
-      });
     } catch (err) {
       console.error('Error creating todo:', err);
       setError('Failed to create todo');
@@ -188,95 +302,11 @@ const DailyTasks = () => {
         )}
       </div>
 
-      {/* New Task Modal */}
-      {showNewTaskModal && (
-        <div className="fixed inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center z-[99999] animate-fadeIn">
-          <div 
-            className="bg-white/80 backdrop-blur-sm rounded-3xl p-8 w-full max-w-md shadow-xl transform transition-all duration-300 animate-scaleUp relative z-[99999]"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="flex justify-between items-center mb-6">
-              <h3 className="text-xl font-semibold text-gray-900">Create New Task</h3>
-              <button
-                onClick={() => setShowNewTaskModal(false)}
-                className="text-gray-400 hover:text-gray-600 transition-all duration-300"
-              >
-                <X size={20} />
-              </button>
-            </div>
-            <form onSubmit={handleAddTodo} className="space-y-6">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Title
-                </label>
-                <input
-                  type="text"
-                  value={newTask.title}
-                  onChange={(e) => setNewTask({ ...newTask, title: e.target.value })}
-                  className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-500/50 transition-all duration-200"
-                  placeholder="Enter task title"
-                  required
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Description
-                </label>
-                <textarea
-                  value={newTask.description}
-                  onChange={(e) => setNewTask({ ...newTask, description: e.target.value })}
-                  className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-500/50 transition-all duration-200"
-                  placeholder="Enter task description"
-                  rows={3}
-                />
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Priority
-                  </label>
-                  <select
-                    value={newTask.priority}
-                    onChange={(e) => setNewTask({ ...newTask, priority: e.target.value as Priority })}
-                    className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-500/50 transition-all duration-200"
-                  >
-                    <option value="low">Low</option>
-                    <option value="medium">Medium</option>
-                    <option value="high">High</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Duration (min)
-                  </label>
-                  <input
-                    type="number"
-                    value={newTask.estimated_duration}
-                    onChange={(e) => setNewTask({ ...newTask, estimated_duration: parseInt(e.target.value) })}
-                    className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-500/50 transition-all duration-200"
-                    min="1"
-                  />
-                </div>
-              </div>
-              <div className="flex justify-end gap-3 pt-4">
-                <button
-                  type="button"
-                  onClick={() => setShowNewTaskModal(false)}
-                  className="px-6 py-2.5 text-gray-600 hover:text-gray-900 bg-gray-50 hover:bg-gray-100 rounded-xl transition-all duration-200"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="px-6 py-2.5 bg-sky-500 text-white rounded-xl hover:bg-sky-600 transition-all duration-200"
-                >
-                  Create Task
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+      <NewTaskModal
+        isOpen={showNewTaskModal}
+        onClose={() => setShowNewTaskModal(false)}
+        onSubmit={handleAddTodo}
+      />
     </>
   );
 };
