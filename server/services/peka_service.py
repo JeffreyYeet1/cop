@@ -1,4 +1,4 @@
-from langchain.chat_models import ChatCohere
+from langchain_community.chat_models import ChatCohere
 from langchain.prompts import ChatPromptTemplate
 from langchain.output_parsers import PydanticOutputParser
 from datetime import datetime
