@@ -1,11 +1,12 @@
 "use client";
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { Home, Focus, Calendar, Settings, LogOut, Sparkles, User2 } from 'lucide-react';
 
 const Sidebar = () => {
   const pathname = usePathname();
+  const router = useRouter();
   const [username, setUsername] = useState("User");
 
   // Simulate getting username
@@ -28,12 +29,12 @@ const Sidebar = () => {
   ];
 
   const handleLogout = () => {
-    // Implement logout functionality
-    console.log("Logging out");
+    localStorage.removeItem('token');
+    router.push('/login');
   };
 
   return (
-    <div className="h-full bg-sky-500/75 backdrop-blur-md text-white flex flex-col animate-fadeIn">
+    <div className="h-full bg-gradient-to-b from-violet-500/90 to-violet-600/90 backdrop-blur-md text-white flex flex-col animate-fadeIn">
       {/* App Title */}
       <div className="p-6 mb-4 animate-fadeIn" style={{animationDelay: "0.1s"}}>
         <div className="flex items-center space-x-2 group cursor-pointer">

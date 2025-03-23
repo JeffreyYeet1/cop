@@ -11,24 +11,24 @@ const getPriorityColor = (priority: Priority) => {
   switch (priority) {
     case 'low':
       return {
-        bg: 'bg-green-50',
-        text: 'text-green-600',
-        border: 'border-green-200',
-        hover: 'hover:bg-green-100 hover:border-green-300'
+        bg: 'bg-sky-50',
+        text: 'text-sky-600',
+        border: 'border-sky-200',
+        hover: 'hover:bg-sky-100 hover:border-sky-300'
       };
     case 'medium':
       return {
-        bg: 'bg-blue-50',
-        text: 'text-blue-600',
-        border: 'border-blue-200',
-        hover: 'hover:bg-blue-100 hover:border-blue-300'
+        bg: 'bg-violet-50',
+        text: 'text-violet-600',
+        border: 'border-violet-200',
+        hover: 'hover:bg-violet-100 hover:border-violet-300'
       };
     case 'high':
       return {
-        bg: 'bg-red-50',
-        text: 'text-red-600',
-        border: 'border-red-200',
-        hover: 'hover:bg-red-100 hover:border-red-300'
+        bg: 'bg-violet-100',
+        text: 'text-violet-700',
+        border: 'border-violet-300',
+        hover: 'hover:bg-violet-200 hover:border-violet-400'
       };
     default:
       return {

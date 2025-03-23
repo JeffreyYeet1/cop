@@ -93,18 +93,18 @@ const PomodoroTimer: React.FC = () => {
   };
 
   return (
-    <div className="bg-white/80 backdrop-blur-sm rounded-3xl border border-sky-100 shadow-[0_0_50px_0_rgba(0,0,0,0.05)] p-12 transition-all duration-300 hover:shadow-[0_0_50px_0_rgba(0,0,0,0.08)]">
+    <div className="bg-white/80 backdrop-blur-sm rounded-3xl border border-violet-100 shadow-[0_0_50px_0_rgba(0,0,0,0.05)] p-12 transition-all duration-300 hover:shadow-[0_0_50px_0_rgba(0,0,0,0.08)]">
       <div className="flex flex-col items-center justify-center space-y-10">
         {/* Mode Selection */}
-        <div className="flex space-x-4 bg-sky-50/50 p-1.5 rounded-2xl">
+        <div className="flex space-x-4 bg-violet-50/50 p-1.5 rounded-2xl">
           {['Pomodoro', 'Short Break', 'Long Break'].map((mode) => (
             <button
               key={mode}
               onClick={() => switchMode(mode as 'Pomodoro' | 'Short Break' | 'Long Break')}
               className={`px-6 py-2.5 rounded-xl text-sm font-medium transition-all duration-300 ${
                 selectedMode === mode
-                  ? 'bg-sky-500 text-white shadow-sm'
-                  : 'text-sky-600 hover:bg-white hover:shadow-sm'
+                  ? 'bg-violet-500 text-white shadow-sm'
+                  : 'text-violet-600 hover:bg-white hover:shadow-sm'
               }`}
             >
               {mode}
@@ -116,7 +116,7 @@ const PomodoroTimer: React.FC = () => {
         <div className="relative transform transition-transform duration-300 hover:scale-105">
           <svg className="w-72 h-72">
             <circle
-              className="text-sky-100"
+              className="text-violet-100"
               strokeWidth="6"
               stroke="currentColor"
               fill="none"
@@ -125,7 +125,7 @@ const PomodoroTimer: React.FC = () => {
               cy="144"
             />
             <circle
-              className="text-sky-500"
+              className="text-violet-500"
               strokeWidth="6"
               stroke="currentColor"
               fill="none"
@@ -152,25 +152,25 @@ const PomodoroTimer: React.FC = () => {
         <div className="flex items-center space-x-6">
           <button
             onClick={toggleTimer}
-            className="p-4 rounded-2xl bg-sky-500 text-white hover:bg-sky-600 transition-all duration-300 hover:shadow-lg transform hover:-translate-y-0.5"
+            className="p-4 rounded-2xl bg-violet-500 text-white hover:bg-violet-600 transition-all duration-300 hover:shadow-lg transform hover:-translate-y-0.5"
           >
             {isActive ? <Pause size={28} /> : <Play size={28} />}
           </button>
           <button
             onClick={resetTimer}
-            className="p-4 rounded-2xl bg-sky-50 text-sky-600 hover:bg-sky-100 transition-all duration-300 hover:shadow-md transform hover:-translate-y-0.5"
+            className="p-4 rounded-2xl bg-violet-50 text-violet-600 hover:bg-violet-100 transition-all duration-300 hover:shadow-md transform hover:-translate-y-0.5"
           >
             <RotateCcw size={28} />
           </button>
           <button
             onClick={() => setShowSettings(true)}
-            className="p-4 rounded-2xl bg-sky-50 text-sky-600 hover:bg-sky-100 transition-all duration-300 hover:shadow-md transform hover:-translate-y-0.5"
+            className="p-4 rounded-2xl bg-violet-50 text-violet-600 hover:bg-violet-100 transition-all duration-300 hover:shadow-md transform hover:-translate-y-0.5"
           >
             <Settings size={28} />
           </button>
         </div>
 
-        <div className="text-sm text-sky-600">
+        <div className="text-sm text-violet-600">
           Focus on your task until the timer ends.
         </div>
       </div>
@@ -178,59 +178,50 @@ const PomodoroTimer: React.FC = () => {
       {/* Settings Modal */}
       {showSettings && (
         <div className="fixed inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center z-50">
-          <div className="bg-white rounded-3xl p-8 w-[400px] shadow-xl">
-            <div className="flex justify-between items-center mb-6">
-              <h3 className="text-xl font-semibold text-gray-900">Timer Settings</h3>
-              <button onClick={() => setShowSettings(false)} className="text-gray-500 hover:text-gray-700">
-                <X size={24} />
-              </button>
-            </div>
-            
-            <div className="space-y-6">
+          <div className="bg-white rounded-2xl p-6 w-full max-w-md shadow-xl">
+            <h2 className="text-xl font-semibold mb-4">Timer Settings</h2>
+            <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
                   Pomodoro Duration (minutes)
                 </label>
                 <input
                   type="number"
                   value={settings.pomodoro}
                   onChange={(e) => updateSettings('pomodoro', Math.max(1, parseInt(e.target.value)))}
-                  className="w-full px-4 py-2 rounded-xl border border-gray-200 focus:border-sky-500 focus:ring-1 focus:ring-sky-500"
+                  className="w-full px-4 py-2 rounded-xl border border-gray-200 focus:border-violet-500 focus:ring-1 focus:ring-violet-500"
                   min="1"
                 />
               </div>
-              
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
                   Short Break Duration (minutes)
                 </label>
                 <input
                   type="number"
                   value={settings.shortBreak}
                   onChange={(e) => updateSettings('shortBreak', Math.max(1, parseInt(e.target.value)))}
-                  className="w-full px-4 py-2 rounded-xl border border-gray-200 focus:border-sky-500 focus:ring-1 focus:ring-sky-500"
+                  className="w-full px-4 py-2 rounded-xl border border-gray-200 focus:border-violet-500 focus:ring-1 focus:ring-violet-500"
                   min="1"
                 />
               </div>
-              
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
                   Long Break Duration (minutes)
                 </label>
                 <input
                   type="number"
                   value={settings.longBreak}
                   onChange={(e) => updateSettings('longBreak', Math.max(1, parseInt(e.target.value)))}
-                  className="w-full px-4 py-2 rounded-xl border border-gray-200 focus:border-sky-500 focus:ring-1 focus:ring-sky-500"
+                  className="w-full px-4 py-2 rounded-xl border border-gray-200 focus:border-violet-500 focus:ring-1 focus:ring-violet-500"
                   min="1"
                 />
               </div>
             </div>
-            
-            <div className="mt-8 flex justify-end">
+            <div className="mt-6 flex justify-end">
               <button
                 onClick={saveSettings}
-                className="px-6 py-2.5 bg-sky-500 text-white rounded-xl hover:bg-sky-600 transition-all duration-300"
+                className="px-6 py-2.5 bg-violet-500 text-white rounded-xl hover:bg-violet-600 transition-all duration-300"
               >
                 Save Changes
               </button>
