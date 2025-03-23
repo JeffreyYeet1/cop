@@ -187,6 +187,7 @@ export function LoginForm() {
             Sign up
           </Link>
         </p>
+        <p className="text-xs text-gray-400 mt-2">© {new Date().getFullYear()} Clash of Plans</p>
       </CardFooter>
     </Card>
   );

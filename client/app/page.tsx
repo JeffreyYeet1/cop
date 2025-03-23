@@ -44,7 +44,7 @@ export default function HomePage() {
       </div>
       
       <footer className="mt-auto pt-8 text-center text-gray-500">
-        <p>© 2023 Clash of Plans. All rights reserved.</p>
+        <p>© {new Date().getFullYear()} Clash of Plans. All rights reserved.</p>
       </footer>
     </div>
   );

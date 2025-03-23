@@ -53,6 +53,7 @@ const OnboardingScreen = () => {
   const [completed, setCompleted] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isRedirecting, setIsRedirecting] = useState(false);
 
   const currentQuestion = questions[currentQuestionIndex];
 
@@ -177,22 +178,42 @@ const OnboardingScreen = () => {
         });
         setSelectedAnswers(loadedAnswers);
         
-        // If all questions are answered, set completed and redirect to dashboard
+        // If all questions are answered, redirect directly to dashboard
         if (Object.keys(loadedAnswers).length === questions.length) {
-          setCompleted(true);
+          console.log('All questions already answered, redirecting to dashboard');
+          setIsRedirecting(true);
           router.push('/dashboard');
+          return true; // Return true to indicate redirect is happening
         }
       }
+      return false; // No redirect needed
     } catch (err) {
       console.error('Error loading preferences:', err);
       // Don't show error to user, just proceed with onboarding
+      return false;
     }
   };
 
   // Load existing preferences when component mounts
   useEffect(() => {
-    loadExistingPreferences();
+    const checkOnboardingStatus = async () => {
+      const isRedirecting = await loadExistingPreferences();
+      if (!isRedirecting) {
+        // Only set completed if we're not redirecting
+        // This prevents the "All set!" screen from flashing before redirect
+        if (Object.keys(selectedAnswers).length === questions.length) {
+          setCompleted(true);
+        }
+      }
+    };
+    
+    checkOnboardingStatus();
   }, []);
+
+  // If we're redirecting, show minimal content to prevent flash
+  if (isRedirecting) {
+    return <div className="h-full flex items-center justify-center">Redirecting...</div>;
+  }
 
   // Show completion screen if all questions are answered
   if (completed) {
