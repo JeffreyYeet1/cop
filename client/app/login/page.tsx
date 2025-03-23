@@ -1,20 +1,23 @@
-'use client';
-
-import { useRouter } from 'next/navigation';
-import AppShell from '../components/AppShell';
+import { Metadata } from 'next';
 import { LoginForm } from '../components/login-form';
 
-export default function LoginPage() {
-  const router = useRouter();
+export const metadata: Metadata = {
+  title: "Log in",
+  description: "Log in to your Clash of Plans account",
+};
 
+export default function LoginPage() {
   return (
-    <AppShell>
-      <div className="h-full flex flex-col items-center justify-center p-4">
-        <div className="w-full max-w-md bg-white rounded-3xl p-8 shadow-sm">
-          <h1 className="text-2xl font-semibold text-gray-800 mb-6">Log in</h1>
-          <LoginForm />
+    <div className="min-h-screen w-full bg-gradient-to-b from-blue-50 to-white flex items-center justify-center">
+      <div className="w-full max-w-[400px] px-4 py-8">
+        <div className="flex flex-col space-y-2 text-center mb-6">
+          <h1 className="text-3xl font-bold tracking-tight text-gray-900">Welcome Back</h1>
+          <p className="text-sm text-gray-600">
+            Log in to your Clash of Plans account
+          </p>
         </div>
+        <LoginForm />
       </div>
-    </AppShell>
+    </div>
   );
 }
