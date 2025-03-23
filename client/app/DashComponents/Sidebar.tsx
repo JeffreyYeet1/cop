@@ -36,16 +36,12 @@ const Sidebar = () => {
   ];
 
   const handleLogout = () => {
-    // Clear user data from localStorage
     localStorage.removeItem('token');
-    localStorage.removeItem('userInfo');
-    
-    // Redirect to home page
-    router.push('/');
+    router.push('/login');
   };
 
   return (
-    <div className="h-full bg-sky-500/75 backdrop-blur-md text-white flex flex-col animate-fadeIn">
+    <div className="h-full bg-gradient-to-b from-violet-500/90 to-violet-600/90 backdrop-blur-md text-white flex flex-col animate-fadeIn">
       {/* App Title */}
       <div className="p-6 mb-4 animate-fadeIn" style={{animationDelay: "0.1s"}}>
         <div className="flex items-center space-x-2 group cursor-pointer">

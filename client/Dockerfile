@@ -43,12 +43,14 @@ WORKDIR /app
 # Copy package files
 COPY package*.json ./
 
-# Install dependencies globally and locally
-RUN npm install -g next
+# Install dependencies
 RUN npm install
 
 # Copy source code
 COPY . .
+
+# Create .next directory
+RUN mkdir -p .next
 
 # Expose the port the app runs on
 EXPOSE 3000

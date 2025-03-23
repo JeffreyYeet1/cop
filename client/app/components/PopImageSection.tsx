@@ -43,10 +43,6 @@ const PopImageSection = () => {
       </div>
       <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-white">
         <div className="container h-full flex items-center justify-center">
-          <div className="text-center">
-            <h2 className="text-4xl font-bold text-gray-900 mb-4">Smart Scheduling</h2>
-            <p className="text-xl text-gray-600">Let AI handle your calendar conflicts</p>
-          </div>
         </div>
       </div>
     </div>

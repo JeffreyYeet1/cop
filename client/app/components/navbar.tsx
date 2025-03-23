@@ -85,7 +85,7 @@ const NavBar = () => {
                 className="object-contain"
               />
             </div>
-            <span className="font-bold text-xl tracking-tight">Clash of Plans</span>
+            <span className="font-bold text-xl tracking-tight">COP</span>
           </Link>
         </div>
 
@@ -95,7 +95,7 @@ const NavBar = () => {
             <Button 
               variant="ghost" 
               size="sm" 
-              className="transition-colors hover:bg-primary/10"
+              className="transition-colors hover:bg-violet-50"
               onClick={handleLogout}
             >
               <LogOut className="w-4 h-4 mr-2" />
@@ -103,10 +103,10 @@ const NavBar = () => {
             </Button>
           ) : (
             <>
-              <Button variant="ghost" size="sm" className="transition-colors hover:bg-primary/10" asChild>
+              <Button variant="ghost" size="sm" className="transition-colors hover:bg-violet-50" asChild>
                 <Link href="/login">Log in</Link>
               </Button>
-              <Button size="sm" className="transition-transform hover:scale-105 bg-blue-500 hover:bg-blue-600" asChild>
+              <Button size="sm" className="transition-transform hover:scale-105 bg-violet-600 hover:bg-violet-700" asChild>
                 <Link href="/signup">Sign up</Link>
               </Button>
             </>
@@ -133,7 +133,7 @@ const NavBar = () => {
                       className="object-contain"
                     />
                   </div>
-                  <span className="font-bold text-xl tracking-tight">Clash of Plans</span>
+                  <span className="font-bold text-xl tracking-tight">COP</span>
                 </div>
               </SheetTitle>
             </SheetHeader>
@@ -168,7 +168,7 @@ const NavBar = () => {
                     <Button variant="outline" className="w-full justify-start transition-colors hover:bg-primary/10" asChild>
                       <Link href="/login" onClick={() => setIsOpen(false)}>Log in</Link>
                     </Button>
-                    <Button className="w-full justify-start transition-transform hover:scale-105 bg-blue-500 hover:bg-blue-600" asChild>
+                    <Button className="w-full justify-start transition-transform hover:scale-105 bg-violet-600 hover:bg-violet-700" asChild>
                       <Link href="/signup" onClick={() => setIsOpen(false)}>Sign up</Link>
                     </Button>
                   </>

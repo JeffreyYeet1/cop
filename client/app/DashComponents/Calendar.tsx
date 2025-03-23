@@ -14,20 +14,18 @@ interface CalendarEvent {
 }
 
 const initialEvents: CalendarEvent[] = [
-  { id: 1, title: 'Product Meeting', time: '9:00', duration: 60, color: 'blue' },
-  { id: 2, title: 'Lunch with Team', time: '12:30', duration: 90, color: 'green' },
-  { id: 3, title: 'Design Review', time: '15:00', duration: 45, color: 'purple' },
-  { id: 4, title: 'Client Call', time: '17:00', duration: 30, color: 'orange' }
+  { id: 1, title: 'Product Meeting', time: '9:00', duration: 60, color: 'violet' },
+  { id: 2, title: 'Lunch with Team', time: '12:30', duration: 90, color: 'sky' },
+  { id: 3, title: 'Design Review', time: '15:00', duration: 45, color: 'violet' },
+  { id: 4, title: 'Client Call', time: '17:00', duration: 30, color: 'sky' }
 ];
 
 const getEventColor = (color: string) => {
   const colors = {
-    blue: 'bg-blue-100 border-blue-300 text-blue-800 hover:bg-blue-200',
-    green: 'bg-green-100 border-green-300 text-green-800 hover:bg-green-200',
-    purple: 'bg-purple-100 border-purple-300 text-purple-800 hover:bg-purple-200',
-    orange: 'bg-orange-100 border-orange-300 text-orange-800 hover:bg-orange-200',
+    violet: 'bg-violet-100 border-violet-300 text-violet-800 hover:bg-violet-200',
+    sky: 'bg-sky-100 border-sky-300 text-sky-800 hover:bg-sky-200',
   };
-  return colors[color as keyof typeof colors] || colors.blue;
+  return colors[color as keyof typeof colors] || colors.violet;
 };
 
 const getEventColorFromPriority = (priority: string) => {
