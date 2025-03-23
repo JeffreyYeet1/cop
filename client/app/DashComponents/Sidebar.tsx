@@ -1,6 +1,8 @@
 "use client";
 import React, { useState } from 'react';
-import Link from 'next/link';
+import Link from "next/link";
+import Image from "next/image";
+import LogoImage from "../../assets/logo.png";
 import { useRouter, usePathname } from 'next/navigation';
 import { 
   Home, 
@@ -35,6 +37,14 @@ const Sidebar = () => {
           className="flex items-center gap-2 mb-8 cursor-pointer"
           onClick={() => setIsDropdownOpen(!isDropdownOpen)}
         >
+           <div className="h-8 w-8 relative">
+            <Image 
+              src={LogoImage} 
+              alt="Clash of Plans Logo" 
+              fill 
+              className="object-contain"
+            />
+          </div>
           <span className="text-xl font-semibold text-gray-700">Clash of Plans</span>
           <ChevronDown size={20} className="text-gray-500" />
         </button>
@@ -76,6 +86,6 @@ const Sidebar = () => {
       </nav>
     </div>
   );
-};
+};  
 
 export default Sidebar; 

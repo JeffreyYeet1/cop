@@ -1,7 +1,7 @@
 // app/page.tsx
 "use client";
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Calendar, Brain, ArrowRight } from 'lucide-react';
 import NavBar from './components/navbar';
@@ -9,6 +9,13 @@ import PopImageSection from './components/PopImageSection';
 import AdditionalFeatures from './components/AddtionalFeatures';
 
 export default function HomePage() {
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    setIsLoggedIn(!!token);
+  }, []);
+
   return (
     <div className="flex flex-col min-h-screen">
       <nav className="w-full">
@@ -33,9 +40,12 @@ export default function HomePage() {
           </div>
           
           <div className="flex flex-col sm:flex-row justify-center gap-4 mb-12">
-            <Link href="/signup" className="flex items-center justify-center gap-2 bg-blue-500 hover:bg-blue-600 text-white font-medium py-3 px-6 rounded-lg transition-colors">
+            <Link 
+              href={isLoggedIn ? "/dashboard" : "/signup"} 
+              className="flex items-center justify-center gap-2 bg-blue-500 hover:bg-blue-600 text-white font-medium py-3 px-6 rounded-lg transition-colors"
+            >
               <Calendar size={20} />
-              <span>Get Started</span>
+              <span>{isLoggedIn ? "Go to Dashboard" : "Get Started"}</span>
               <ArrowRight size={16} />
             </Link>
           </div>

@@ -67,13 +67,7 @@ const Calendar = () => {
   const date = new Date();
   const dayName = date.toLocaleString('en-US', { weekday: 'long' });
   const monthDay = date.toLocaleString('en-US', { month: 'long', day: 'numeric' });
-  const [events, setEvents] = useState<Event[]>([
-    { id: '1', time: "7 AM", title: "Morning routine", duration: "30min", color: "bg-blue-400" },
-    { id: '2', time: "10 AM", title: "Product demo with Jenn", duration: "1h", color: "bg-orange-400" },
-    { id: '3', time: "11 AM", title: "Investigate secondary growth channels", duration: "1h", color: "bg-blue-400" },
-    { id: '4', time: "12 PM", title: "Lunch", duration: "1h", color: "bg-blue-400" },
-    { id: '5', time: "1 PM", title: "Review prototype of new feature", duration: "2h", color: "bg-purple-400" },
-  ]);
+  const [events, setEvents] = useState<Event[]>([]);
 
   const handleEventDrop = (newTime: string, droppedEvent: Event) => {
     setEvents(events.map(e => 

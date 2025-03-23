@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import LogoImage from "../../assets/logo.png";
+import { useRouter } from 'next/navigation';
 
 import { Button } from "./ui/button";
 import {
@@ -23,7 +24,8 @@ import {
   Users,
   BookOpen,
   School,
-  LucideIcon
+  LucideIcon,
+  LogOut
 } from "lucide-react";
 
 type NavItem = {
@@ -33,15 +35,20 @@ type NavItem = {
   icon?: LucideIcon;
 };
 
-
 const NavBar = () => {
+  const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   useEffect(() => {
     setMounted(true);
     
+    // Check if user is logged in by looking for the token
+    const token = localStorage.getItem('token');
+    setIsLoggedIn(!!token);
+
     const handleScroll = () => {
       if (window.scrollY > 10) {
         setScrolled(true);
@@ -53,6 +60,12 @@ const NavBar = () => {
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
+
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    setIsLoggedIn(false);
+    router.push('/');
+  };
 
   return (
     <header className={`sticky top-0 z-50 w-full border-b backdrop-blur transition-all duration-300 ${
@@ -78,12 +91,26 @@ const NavBar = () => {
 
         {/* Auth Buttons */}
         <div className="hidden md:flex items-center gap-4">
-          <Button variant="ghost" size="sm" className="transition-colors hover:bg-primary/10" asChild>
-            <Link href="/login">Log in</Link>
-          </Button>
-          <Button size="sm" className="transition-transform hover:scale-105" asChild>
-            <Link href="/signup">Sign up</Link>
-          </Button>
+          {isLoggedIn ? (
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              className="transition-colors hover:bg-primary/10"
+              onClick={handleLogout}
+            >
+              <LogOut className="w-4 h-4 mr-2" />
+              Log out
+            </Button>
+          ) : (
+            <>
+              <Button variant="ghost" size="sm" className="transition-colors hover:bg-primary/10" asChild>
+                <Link href="/login">Log in</Link>
+              </Button>
+              <Button size="sm" className="transition-transform hover:scale-105 bg-blue-500 hover:bg-blue-600" asChild>
+                <Link href="/signup">Sign up</Link>
+              </Button>
+            </>
+          )}
         </div>
 
         {/* Mobile Menu Button */}
@@ -99,13 +126,13 @@ const NavBar = () => {
               <SheetTitle>
                 <div className="flex items-center gap-2">
                   <div className="h-8 w-8 relative">
-                <Image 
-                  src={LogoImage} 
-                  alt="Clash of Plans Logo" 
-                  fill 
-                  className="object-contain"
-                />
-                    </div>
+                    <Image 
+                      src={LogoImage} 
+                      alt="Clash of Plans Logo" 
+                      fill 
+                      className="object-contain"
+                    />
+                  </div>
                   <span className="font-bold text-xl tracking-tight">Clash of Plans</span>
                 </div>
               </SheetTitle>
@@ -124,12 +151,28 @@ const NavBar = () => {
               </div>
 
               <div className="flex flex-col gap-2 mt-auto">
-                <Button variant="outline" className="w-full justify-start transition-colors hover:bg-primary/10" asChild>
-                  <Link href="/login" onClick={() => setIsOpen(false)}>Log in</Link>
-                </Button>
-                <Button className="w-full justify-start transition-transform hover:scale-105 bg-blue-500 hover:bg-blue-600" asChild>
-                  <Link href="/signup" onClick={() => setIsOpen(false)}>Sign up</Link>
-                </Button>
+                {isLoggedIn ? (
+                  <Button 
+                    variant="outline" 
+                    className="w-full justify-start transition-colors hover:bg-primary/10"
+                    onClick={() => {
+                      handleLogout();
+                      setIsOpen(false);
+                    }}
+                  >
+                    <LogOut className="w-4 h-4 mr-2" />
+                    Log out
+                  </Button>
+                ) : (
+                  <>
+                    <Button variant="outline" className="w-full justify-start transition-colors hover:bg-primary/10" asChild>
+                      <Link href="/login" onClick={() => setIsOpen(false)}>Log in</Link>
+                    </Button>
+                    <Button className="w-full justify-start transition-transform hover:scale-105 bg-blue-500 hover:bg-blue-600" asChild>
+                      <Link href="/signup" onClick={() => setIsOpen(false)}>Sign up</Link>
+                    </Button>
+                  </>
+                )}
               </div>
             </div>
           </SheetContent>
