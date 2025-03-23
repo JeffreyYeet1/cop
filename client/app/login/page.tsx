@@ -13,17 +13,6 @@ export default function LoginPage() {
         <div className="w-full max-w-md bg-white rounded-3xl p-8 shadow-sm">
           <h1 className="text-2xl font-semibold text-gray-800 mb-6">Log in</h1>
           <LoginForm />
-          <div className="mt-6 text-center">
-            <p className="text-sm text-gray-600">
-              Don't have an account?{' '}
-              <button 
-                className="text-apple-blue font-medium"
-                onClick={() => router.push('/signup')}
-              >
-                Sign up
-              </button>
-            </p>
-          </div>
         </div>
       </div>
     </AppShell>
