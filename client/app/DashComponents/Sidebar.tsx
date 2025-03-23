@@ -1,19 +1,27 @@
 "use client";
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { Home, Focus, Calendar, Settings, LogOut, Sparkles, User2 } from 'lucide-react';
 
 const Sidebar = () => {
   const pathname = usePathname();
+  const router = useRouter();
   const [username, setUsername] = useState("User");
+  const [email, setEmail] = useState("");
 
-  // Simulate getting username
   useEffect(() => {
-    // In a real app, this would fetch from an API or auth system
-    setTimeout(() => {
-      setUsername("Alex Johnson");
-    }, 1000);
+    // Get user info from localStorage
+    const token = localStorage.getItem('token');
+    if (token) {
+      try {
+        const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
+        setUsername(userInfo.name || "User");
+        setEmail(userInfo.email || "user@example.com");
+      } catch (error) {
+        console.error('Error parsing user info:', error);
+      }
+    }
   }, []);
 
   const isActive = (path: string) => {
@@ -28,8 +36,12 @@ const Sidebar = () => {
   ];
 
   const handleLogout = () => {
-    // Implement logout functionality
-    console.log("Logging out");
+    // Clear user data from localStorage
+    localStorage.removeItem('token');
+    localStorage.removeItem('userInfo');
+    
+    // Redirect to home page
+    router.push('/');
   };
 
   return (
@@ -70,7 +82,7 @@ const Sidebar = () => {
             </div>
             <div className="flex-1 transition-all duration-300 group-hover:translate-x-0.5">
               <div className="text-sm font-medium transition-all duration-300 group-hover:text-white">{username}</div>
-              <div className="text-xs text-white/80 transition-all duration-300 group-hover:text-white/90">{username.toLowerCase().replace(' ', '.')}@example.com</div>
+              <div className="text-xs text-white/80 transition-all duration-300 group-hover:text-white/90">{email}</div>
             </div>
           </div>
           <button

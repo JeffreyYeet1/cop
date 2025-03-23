@@ -137,60 +137,62 @@ const DailyTasks = () => {
   }
 
   return (
-    <div className="p-5 min-h-full bg-white">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <h2 className="text-2xl font-semibold text-gray-900">Todo</h2>
-        <button
-          onClick={() => setShowNewTaskModal(true)}
-          className="inline-flex items-center gap-2 px-4 py-2 bg-sky-50 text-sky-600 rounded-xl hover:bg-sky-100 transition-all duration-300 shadow-sm hover:shadow-md transform hover:-translate-y-1"
-        >
-          <Plus size={16} />
-          <span className="text-sm font-medium">Add Task</span>
-        </button>
-      </div>
-
-      {todos.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-12 animate-fadeIn" style={{animationDelay: "0.3s"}}>
-          <div className="w-14 h-14 bg-blue-50 rounded-full flex items-center justify-center mb-3 transform hover:scale-110 transition-all duration-300">
-            <Plus size={20} className="text-blue-500" />
-          </div>
-          <div className="text-gray-500 mb-3 text-center">
-            No tasks for today. Click "Add Task" to add one!
-          </div>
-          <button 
+    <>
+      <div className={`p-5 min-h-full bg-white ${showNewTaskModal ? 'blur-sm' : ''} transition-all duration-300`}>
+        {/* Header */}
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-2xl font-semibold text-gray-900">Todo</h2>
+          <button
             onClick={() => setShowNewTaskModal(true)}
-            className="text-blue-500 hover:text-blue-600 font-medium transition-all duration-300 transform hover:-translate-y-1"
+            className="inline-flex items-center gap-2 px-4 py-2 bg-sky-50 text-sky-600 rounded-xl hover:bg-sky-100 transition-all duration-300 shadow-sm hover:shadow-md transform hover:-translate-y-1"
           >
-            Create your first task
+            <Plus size={16} />
+            <span className="text-sm font-medium">Add Task</span>
           </button>
         </div>
-      ) : (
-        <div className="space-y-3">
-          {todos.map((todo, index) => (
-            <TaskCard
-              key={todo.id}
-              id={todo.id}
-              title={todo.title}
-              description={todo.description}
-              time={`${todo.estimated_duration}min`}
-              priority={todo.priority as Priority}
-              onDelete={() => handleDeleteTodo(todo.id)}
-              onUpdate={handleUpdateTodo}
-              onDragStart={handleDragStart}
-              onDragOver={handleDragOver}
-              onDrop={handleDrop}
-              style={{animationDelay: `${0.3 + index * 0.08}s`}}
-            />
-          ))}
-        </div>
-      )}
 
-      {/* New Task Modal - Updated with proper isolation */}
+        {todos.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-12 animate-fadeIn" style={{animationDelay: "0.3s"}}>
+            <div className="w-14 h-14 bg-blue-50 rounded-full flex items-center justify-center mb-3 transform hover:scale-110 transition-all duration-300">
+              <Plus size={20} className="text-blue-500" />
+            </div>
+            <div className="text-gray-500 mb-3 text-center">
+              No tasks for today. Click "Add Task" to add one!
+            </div>
+            <button 
+              onClick={() => setShowNewTaskModal(true)}
+              className="text-blue-500 hover:text-blue-600 font-medium transition-all duration-300 transform hover:-translate-y-1"
+            >
+              Create your first task
+            </button>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {todos.map((todo, index) => (
+              <TaskCard
+                key={todo.id}
+                id={todo.id}
+                title={todo.title}
+                description={todo.description}
+                time={`${todo.estimated_duration}min`}
+                priority={todo.priority as Priority}
+                onDelete={() => handleDeleteTodo(todo.id)}
+                onUpdate={handleUpdateTodo}
+                onDragStart={handleDragStart}
+                onDragOver={handleDragOver}
+                onDrop={handleDrop}
+                style={{animationDelay: `${0.3 + index * 0.08}s`}}
+              />
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* New Task Modal */}
       {showNewTaskModal && (
-        <div className="fixed inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center z-[100] animate-fadeIn">
+        <div className="fixed inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center z-[99999] animate-fadeIn">
           <div 
-            className="bg-white/80 backdrop-blur-sm rounded-3xl p-8 w-full max-w-md shadow-xl transform transition-all duration-300 animate-scaleUp"
+            className="bg-white/80 backdrop-blur-sm rounded-3xl p-8 w-full max-w-md shadow-xl transform transition-all duration-300 animate-scaleUp relative z-[99999]"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex justify-between items-center mb-6">
@@ -275,7 +277,7 @@ const DailyTasks = () => {
           </div>
         </div>
       )}
-    </div>
+    </>
   );
 };
 
