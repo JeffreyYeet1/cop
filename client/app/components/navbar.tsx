@@ -74,14 +74,6 @@ const NavBar = () => {
             </div>
             <span className="font-bold text-xl tracking-tight">Clash of Plans</span>
           </Link>
-
-          {/* Desktop Navigation */}
-          <nav className="hidden md:flex gap-6 items-center">
-            <Link href="/about" className="text-sm font-medium transition-colors hover:text-primary relative group">
-              About
-              <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-primary transition-all duration-300 group-hover:w-full"></span>
-            </Link>
-          </nav>
         </div>
 
         {/* Auth Buttons */}
@@ -106,9 +98,14 @@ const NavBar = () => {
             <SheetHeader>
               <SheetTitle>
                 <div className="flex items-center gap-2">
-                  <div className="bg-primary rounded-md p-1 flex items-center justify-center h-8 w-8">
-                    <span className="text-primary-foreground font-bold">AX</span>
-                  </div>
+                  <div className="h-8 w-8 relative">
+                <Image 
+                  src={LogoImage} 
+                  alt="Clash of Plans Logo" 
+                  fill 
+                  className="object-contain"
+                />
+                    </div>
                   <span className="font-bold text-xl tracking-tight">Clash of Plans</span>
                 </div>
               </SheetTitle>
@@ -130,7 +127,7 @@ const NavBar = () => {
                 <Button variant="outline" className="w-full justify-start transition-colors hover:bg-primary/10" asChild>
                   <Link href="/login" onClick={() => setIsOpen(false)}>Log in</Link>
                 </Button>
-                <Button className="w-full justify-start transition-transform hover:scale-105" asChild>
+                <Button className="w-full justify-start transition-transform hover:scale-105 bg-blue-500 hover:bg-blue-600" asChild>
                   <Link href="/signup" onClick={() => setIsOpen(false)}>Sign up</Link>
                 </Button>
               </div>

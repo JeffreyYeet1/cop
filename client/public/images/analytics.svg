@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="48" height="48" rx="24" fill="#E6F0FF" />
+  <path d="M34 32H14V16C14 15.45 13.55 15 13 15C12.45 15 12 15.45 12 16V33C12 33.55 12.45 34 13 34H34C34.55 34 35 33.55 35 33C35 32.45 34.55 32 34 32Z" fill="#2563EB" />
+  <path d="M16 25H19V32H16V25Z" fill="#3B82F6" />
+  <path d="M21 21H24V32H21V21Z" fill="#3B82F6" />
+  <path d="M26 28H29V32H26V28Z" fill="#3B82F6" />
+  <path d="M31 18H34V32H31V18Z" fill="#3B82F6" />
+  <path d="M37 14L35 16M37 18L35 16M35 16H38" stroke="#3B82F6" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+  <path d="M25 13L23 15M21 13L23 15M23 15V18" stroke="#3B82F6" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+</svg>
