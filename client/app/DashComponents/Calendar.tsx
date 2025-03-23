@@ -1,7 +1,8 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Calendar as CalendarIcon, Plus, Users, ChevronLeft, ChevronRight, Sparkles, Trash2, X } from 'lucide-react';
+import { createPortal } from 'react-dom';
 
 // Sample event data
 interface CalendarEvent {
@@ -64,6 +65,17 @@ const NewEventModal: React.FC<NewEventModalProps> = ({ isOpen, onClose, onSubmit
   const [time, setTime] = useState('09:00');
   const [duration, setDuration] = useState(30);
   const [color, setColor] = useState('blue');
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+    return () => setMounted(false);
+  }, []);
+
+  if (!isOpen || !mounted) return null;
+
+  const modalRoot = document.getElementById('modal-root');
+  if (!modalRoot) return null;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -80,10 +92,8 @@ const NewEventModal: React.FC<NewEventModalProps> = ({ isOpen, onClose, onSubmit
     onClose();
   };
 
-  if (!isOpen) return null;
-
-  return (
-    <div className="fixed inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center z-[1000] animate-fadeIn">
+  return createPortal(
+    <div className="fixed inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center animate-fadeIn">
       <div 
         className="bg-white/80 backdrop-blur-sm rounded-3xl p-8 w-full max-w-md shadow-xl transform transition-all duration-300 animate-scaleUp"
         onClick={(e) => e.stopPropagation()}
@@ -171,7 +181,8 @@ const NewEventModal: React.FC<NewEventModalProps> = ({ isOpen, onClose, onSubmit
           </div>
         </form>
       </div>
-    </div>
+    </div>,
+    modalRoot
   );
 };
 
@@ -330,12 +341,12 @@ const Calendar: React.FC = () => {
   return (
     <>
       <div 
-        className={`p-5 min-h-full bg-white overflow-hidden animate-fadeIn relative z-0 ${
+        className={`p-5 min-h-full bg-white overflow-hidden animate-fadeIn relative ${
           isNewEventModalOpen ? 'blur-sm' : ''
         } transition-all duration-300`}
       >
         {/* Header */}
-        <div className="flex justify-between items-center mb-6 animate-fadeIn relative z-[1]" style={{animationDelay: "0.1s"}}>
+        <div className="flex justify-between items-center mb-6 animate-fadeIn relative" style={{animationDelay: "0.1s"}}>
           <div>
             <div className="flex items-center space-x-2 mb-1">
               <div className="w-3 h-3 bg-purple-500 rounded-full animate-pulse"></div>
@@ -360,7 +371,7 @@ const Calendar: React.FC = () => {
         </div>
 
         {/* Navigation */}
-        <div className="flex justify-between items-center mb-6 animate-fadeIn relative z-[1]" style={{animationDelay: "0.2s"}}>
+        <div className="flex justify-between items-center mb-6 animate-fadeIn relative" style={{animationDelay: "0.2s"}}>
           <div className="flex space-x-1">
             <button className="p-1.5 rounded-full hover:bg-gray-100 transition-all duration-200">
               <ChevronLeft size={16} className="text-gray-500" />
@@ -376,7 +387,7 @@ const Calendar: React.FC = () => {
         </div>
 
         {/* Calendar Grid */}
-        <div className="border-t border-gray-200 animate-fadeIn relative z-0" style={{animationDelay: "0.3s"}}>
+        <div className="border-t border-gray-200 animate-fadeIn relative" style={{animationDelay: "0.3s"}}>
           {/* Render events first so they appear above the grid */}
           {events.map(event => {
             const eventStartMinutes = timeToMinutes(event.time);
@@ -447,7 +458,6 @@ const Calendar: React.FC = () => {
         </div>
       </div>
 
-      {/* Modal */}
       <NewEventModal
         isOpen={isNewEventModalOpen}
         onClose={() => setIsNewEventModalOpen(false)}
