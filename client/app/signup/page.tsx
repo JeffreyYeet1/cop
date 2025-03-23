@@ -1,13 +1,16 @@
+"use client";
+
 import { SignUpForm } from "../components/signup-form";
 import { Metadata } from "next";
 import BaseNavBar from "../components/baseNavBar";
-
-export const metadata: Metadata = {
-  title: "Sign Up",
-  description: "Create a new account",
-};
+import { useRouter } from "next/navigation";
 
 export default function SignUpPage() {
+  const router = useRouter();
+  const token = localStorage.getItem('token');
+  if (token) {
+    router.push('/dashboard');
+  }
   return (
     <div className="flex flex-col min-h-screen">
       <nav className="w-full">

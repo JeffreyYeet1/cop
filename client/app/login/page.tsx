@@ -1,13 +1,16 @@
+"use client";
+
 import { Metadata } from 'next';
 import { LoginForm } from '../components/login-form';
 import BaseNavBar from '../components/baseNavBar';
-
-export const metadata: Metadata = {
-  title: "Log in",
-  description: "Log in to your Clash of Plans account",
-};
+import { useRouter } from 'next/navigation';
 
 export default function LoginPage() {
+  const router = useRouter();
+  const token = localStorage.getItem('token');
+  if (token) {
+    router.push('/dashboard');
+  }
   return (
     <div className="flex flex-col min-h-screen">
       <nav className="w-full">
