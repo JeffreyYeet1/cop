@@ -87,8 +87,28 @@ export function LoginForm() {
         localStorage.setItem('token', data.access_token);
         console.log('Token stored in localStorage');
         
-        // Redirect to onboarding
-        router.push('/onboarding');
+        // Check if user has completed onboarding
+        const onboardingResponse = await fetch('http://localhost:8000/onboarding/preferences', {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${data.access_token}`,
+          },
+        });
+        
+        if (onboardingResponse.ok) {
+          const onboardingData = await onboardingResponse.json();
+          
+          // If user has existing preferences, redirect directly to dashboard
+          if (onboardingData.preferences && onboardingData.preferences.length > 0) {
+            router.push('/dashboard');
+          } else {
+            // Otherwise, redirect to onboarding
+            router.push('/onboarding');
+          }
+        } else {
+          // If there's an error checking onboarding status, default to onboarding page
+          router.push('/onboarding');
+        }
       } catch (error) {
         console.error('Error:', error);
         alert(error instanceof Error ? error.message : 'Failed to login');
