@@ -52,6 +52,7 @@ interface TaskCardProps {
   onDragOver?: (e: React.DragEvent<HTMLDivElement>) => void;
   onDrop?: (e: React.DragEvent<HTMLDivElement>, id: number) => void;
   style?: React.CSSProperties;
+  estimated_duration?: number;
 }
 
 const TaskCard: React.FC<TaskCardProps> = ({
@@ -65,7 +66,7 @@ const TaskCard: React.FC<TaskCardProps> = ({
   onDragStart,
   onDragOver,
   onDrop,
-  style
+  style,
 }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [isCompleted, setIsCompleted] = useState(false);
@@ -95,12 +96,31 @@ const TaskCard: React.FC<TaskCardProps> = ({
     }
   };
 
+  const handleDragStart = (e: React.DragEvent<HTMLDivElement>) => {
+    if (onDragStart) {
+      onDragStart(e, id);
+    }
+    // Parse the time string to get duration in minutes
+    const duration = time ? parseInt(time.replace('min', '')) : 30;
+    
+    e.dataTransfer.setData('application/json', JSON.stringify({
+      type: 'task',
+      data: {
+        id,
+        title,
+        description,
+        priority,
+        duration
+      }
+    }));
+  };
+
   return (
     <div
       ref={cardRef}
       className={`relative border p-4 rounded-xl animate-fadeIn shadow-sm ${priorityColors.bg} ${priorityColors.border} ${priorityColors.hover} hover:-translate-y-1 transition-all duration-300 group`}
-      draggable={onDragStart !== undefined}
-      onDragStart={(e) => onDragStart && onDragStart(e, id)}
+      draggable={true}
+      onDragStart={handleDragStart}
       onDragOver={(e) => onDragOver && onDragOver(e)}
       onDrop={(e) => onDrop && onDrop(e, id)}
       style={{
