@@ -1,5 +1,5 @@
 from typing import Annotated
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.security import OAuth2PasswordRequestForm
 from datetime import timedelta
 
@@ -9,6 +9,7 @@ from services.auth_service import authenticate_user, create_jwt_token
 from services.google_auth_service import verify_google_token
 from repositories.user_repo import create_or_update_oauth_user
 from db.supabase import create_supabase_client
+from services.token_service import TokenService
 
 router = APIRouter()
 supabase = create_supabase_client()
@@ -36,18 +37,21 @@ async def login_for_access_token(
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.post("/google", response_model=GoogleAuthResponse)
-async def google_auth(request: GoogleAuthRequest):
+async def google_auth(request: Request, auth_request: GoogleAuthRequest):
     """
     Verify Google token to get user info, then sign in or create user with Supabase
     """
     try:
         # Verify Google token and get user info
-        user_info = await verify_google_token(request.code, request.redirect_uri)
+        user_info = await verify_google_token(auth_request.code, auth_request.redirect_uri)
         if not user_info:
             raise HTTPException(status_code=400, detail="Invalid Google token")
         
         if not user_info.get('email_verified'):
             raise HTTPException(status_code=400, detail="Email not verified")
+
+        # Store the Google OAuth token in the session
+        TokenService.store_token(request, user_info['access_token'])
 
         # Try OAuth sign in first
         try:
@@ -71,9 +75,17 @@ async def google_auth(request: GoogleAuthRequest):
         return GoogleAuthResponse(
             access_token=token,
             token_type="bearer",
-            user=db_user  # db_user is already a dictionary as required by GoogleAuthResponse
+            user=db_user
         )
 
     except Exception as e:
         print(f"Google auth failed: {str(e)}")
-        raise HTTPException(status_code=400, detail=str(e)) 
+        raise HTTPException(status_code=400, detail=str(e))
+
+@router.get("/token")
+async def get_token(request: Request):
+    """Get the Google OAuth token for the current user."""
+    token = TokenService.get_token(request)
+    if not token:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    return {"access_token": token} 

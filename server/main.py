@@ -1,9 +1,18 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from starlette.middleware.sessions import SessionMiddleware
+from core.config import SECRET_KEY
 
-from api.routes import auth, users, onboarding, todo
+from api.routes import auth, users, onboarding, todo, calendar
 
 app = FastAPI()
+
+# Add session middleware
+app.add_middleware(
+    SessionMiddleware,
+    secret_key=SECRET_KEY,
+    max_age=60 * 60 * 24,  # 1 day
+)
 
 # Add CORS middleware
 app.add_middleware(
@@ -39,6 +48,7 @@ app.include_router(auth.router, prefix="/api/auth", tags=["auth"])
 app.include_router(users.router, prefix="/api/users", tags=["users"])
 app.include_router(onboarding.router, prefix="/api/onboarding", tags=["onboarding"])
 app.include_router(todo.router, prefix="/api/todo", tags=["todo"])
+app.include_router(calendar.router, prefix="/api/calendar", tags=["calendar"])
 
 @app.get("/")
 async def root():

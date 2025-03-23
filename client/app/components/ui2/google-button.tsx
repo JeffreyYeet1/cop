@@ -15,7 +15,13 @@ export function GoogleButton({ mode, className = "" }: GoogleButtonProps) {
   const handleGoogleAuth = () => {
     const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
     const redirectUri = `${window.location.origin}/auth/callback/google`;
-    const scope = "email profile";
+    const scope = [
+      "email",
+      "profile",
+      "https://www.googleapis.com/auth/calendar",        // Full access to calendars
+      "https://www.googleapis.com/auth/calendar.events", // Full access to events
+      "https://www.googleapis.com/auth/calendar.readonly" // Read-only access as fallback
+    ].join(" ");
     
     const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${clientId}&redirect_uri=${redirectUri}&response_type=code&scope=${scope}&access_type=offline&prompt=consent`;
     
