@@ -3,9 +3,12 @@ import type { Metadata } from "next";
 import { GeistSans } from 'geist/font/sans'
 import { GeistMono } from 'geist/font/mono'
 import "./globals.css";
+import { Inter } from 'next/font/google'
+import { Providers } from './providers'
 
 const geistSans = GeistSans;
 const geistMono = GeistMono;
+const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
   title: "COP - Your Productivity Companion",
@@ -14,15 +17,19 @@ export const metadata: Metadata = {
 
 export default function RootLayout({
   children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+}: {
+  children: React.ReactNode
+}) {
   return (
-    <html lang="en" className={`${geistSans.variable} ${geistMono.variable}`}>
+    <html lang="en" suppressHydrationWarning className={`${geistSans.variable} ${geistMono.variable} ${inter.className}`}>
       <body className="antialiased min-h-screen flex flex-col items-center bg-background">
-        <div className="flex flex-col w-full">
-          {children}
-        </div>
+        <Providers>
+          <div className="page-transition-wrapper">
+            <div className="flex flex-col w-full">
+              {children}
+            </div>
+          </div>
+        </Providers>
       </body>
     </html>
   );

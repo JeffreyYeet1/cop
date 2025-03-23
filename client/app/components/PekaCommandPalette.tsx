@@ -167,13 +167,7 @@ export default function PekaCommandPalette() {
 
   return (
     <>
-      {/* Persistent Indicator */}
-      <div className="fixed bottom-4 right-4 bg-white/80 backdrop-blur-sm rounded-full shadow-lg border border-gray-200 px-4 py-2 flex items-center gap-2 text-sm text-gray-600">
-        <Sparkles className="w-4 h-4 text-blue-500" />
-        <span>Press</span>
-        <kbd className="px-2 py-1 bg-gray-100 rounded text-xs font-medium">⌘O</kbd>
-        <span>to talk to Peka</span>
-      </div>
+
 
       {/* Command Palette and Chat Response Container */}
       <AnimatePresence>
