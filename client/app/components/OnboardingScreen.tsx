@@ -109,7 +109,7 @@ const OnboardingScreen = () => {
       });
       
       // Make API call to save to database
-      const response = await fetch('/api/onboarding/preferences', {
+      const response = await fetch('http://localhost:8000/api/onboarding/preferences', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -148,7 +148,7 @@ const OnboardingScreen = () => {
         return;
       }
 
-      const response = await fetch('/api/onboarding/preferences', {
+      const response = await fetch('http://localhost:8000/api/onboarding/preferences', {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`,
