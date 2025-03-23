@@ -88,7 +88,7 @@ export function LoginForm() {
         console.log('Token stored in localStorage');
         
         // Check if user has completed onboarding
-        const onboardingResponse = await fetch('http://localhost:8000/onboarding/preferences', {
+        const onboardingResponse = await fetch('http://localhost:8000/api/onboarding/preferences', {
           method: 'GET',
           headers: {
             'Authorization': `Bearer ${data.access_token}`,

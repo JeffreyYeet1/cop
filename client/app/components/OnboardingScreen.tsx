@@ -176,7 +176,12 @@ const OnboardingScreen = () => {
           }
         });
         setSelectedAnswers(loadedAnswers);
-        setCompleted(true);
+        
+        // If all questions are answered, set completed and redirect to dashboard
+        if (Object.keys(loadedAnswers).length === questions.length) {
+          setCompleted(true);
+          router.push('/dashboard');
+        }
       }
     } catch (err) {
       console.error('Error loading preferences:', err);
