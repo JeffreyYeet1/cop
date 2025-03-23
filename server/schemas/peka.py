@@ -1,27 +1,30 @@
-from enum import Enum
 from pydantic import BaseModel
+from typing import List, Optional
 from datetime import datetime
-from typing import List
 
-class TaskPriority(str, Enum):
-    LOW = "low"
-    MEDIUM = "medium"
-    HIGH = "high"
+class TaskDetails(BaseModel):
+    title: str
+    description: str
+    priority: str  # 'low' | 'medium' | 'high'
+    estimated_duration: int
+    task_id: Optional[int] = None
 
-class TaskProgress(str, Enum):
-    NOT_STARTED = "not_started"
-    IN_PROGRESS = "in_progress"
-    COMPLETED = "completed"
+class UnifiedResponse(BaseModel):
+    intent: str  # 'create' | 'analyze' | 'general'
+    task_details: Optional[TaskDetails] = None
+    message: str
+    action_items: List[str]
+    timestamp: datetime
 
 class Task(BaseModel):
     id: int
-    user_id: str
+    user_id: int
     title: str
     description: str
-    priority: TaskPriority
-    estimated_duration: int
+    priority: str  # 'low' | 'medium' | 'high'
+    estimated_duration: Optional[int] = None
     created_at: datetime
-    progress: TaskProgress
+    progress: Optional[str] = 'not_started'  # 'not_started' | 'in_progress' | 'completed'
 
 class TaskRecommendation(BaseModel):
     task_id: int
@@ -35,4 +38,4 @@ class PekaResponse(BaseModel):
 class GeneralResponse(BaseModel):
     response: str
     action_items: List[str]
-    timestamp: datetime = datetime.now() 
+    timestamp: datetime 

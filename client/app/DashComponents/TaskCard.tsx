@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Clock, Trash2, Pencil } from "lucide-react";
+import { Clock, Trash2, Pencil, Check } from "lucide-react";
 import { todoService } from '../services/todoService';
 import { Todo } from '../types/todo';
 
@@ -29,48 +29,32 @@ const getPriorityColor = (priority: string) => {
 };
 
 const TaskCard = ({ id, title, description, time, priority, onDelete, onUpdate }: TaskCardProps) => {
-  const [isCompleted, setIsCompleted] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
+  const [isCompleted, setIsCompleted] = useState(false);
   const [editedTask, setEditedTask] = useState({ title, description, priority });
-
-  const handleToggleComplete = async () => {
-    try {
-      setIsCompleted(!isCompleted);
-      await todoService.updateTodo(id, {
-        title,
-        description,
-        priority,
-        estimated_duration: parseInt(time.replace('min', ''))
-      });
-    } catch (err) {
-      console.error('Error updating todo:', err);
-    }
-  };
 
   const handleUpdate = async () => {
     try {
-      await todoService.updateTodo(id, {
+      const updatedTodo = await todoService.updateTodo(id, {
         title: editedTask.title,
         description: editedTask.description,
         priority: editedTask.priority,
         estimated_duration: parseInt(time.replace('min', ''))
       });
-      onUpdate({ id, title: editedTask.title, description: editedTask.description, priority: editedTask.priority, estimated_duration: parseInt(time.replace('min', '')), user_id: 0, created_at: '' });
+      onUpdate(updatedTodo);
       setIsEditing(false);
     } catch (err) {
       console.error('Error updating todo:', err);
     }
   };
 
+  const handleToggleComplete = () => {
+    setIsCompleted(!isCompleted);
+  };
+
   return (
-    <div className={`bg-white p-4 rounded-2xl shadow-md w-full border transition-all duration-200 ${isCompleted ? 'opacity-75' : ''}`}>
+    <div className="bg-white p-4 rounded-2xl shadow-md w-full border transition-all duration-200">
       <div className="flex items-start gap-4">
-        <input
-          type="checkbox"
-          checked={isCompleted}
-          onChange={handleToggleComplete}
-          className="mt-1 w-5 h-5 accent-blue-500 cursor-pointer"
-        />
         <div className="flex-1">
           {isEditing ? (
             <div className="space-y-2">
@@ -113,9 +97,21 @@ const TaskCard = ({ id, title, description, time, priority, onDelete, onUpdate }
           ) : (
             <>
               <div className="flex items-center justify-between">
-                <h3 className={`text-lg font-semibold ${isCompleted ? 'line-through text-gray-500' : ''}`}>
-                  {title}
-                </h3>
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={handleToggleComplete}
+                    className={`w-5 h-5 rounded border flex items-center justify-center transition-colors ${
+                      isCompleted 
+                        ? 'bg-blue-500 border-blue-500' 
+                        : 'border-gray-300 hover:border-blue-500'
+                    }`}
+                  >
+                    {isCompleted && <Check size={12} className="text-white" />}
+                  </button>
+                  <h3 className={`text-lg font-semibold ${isCompleted ? 'line-through text-gray-400' : ''}`}>
+                    {title}
+                  </h3>
+                </div>
                 <div className="flex items-center gap-2">
                   <span className={`px-2 py-1 rounded-full text-sm ${getPriorityColor(priority)}`}>
                     {priority}

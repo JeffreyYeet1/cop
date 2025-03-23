@@ -4,17 +4,17 @@ import React, { useEffect, useState } from 'react';
 import TaskCard from './TaskCard';
 import { Plus, X } from 'lucide-react';
 import { todoService } from '../services/todoService';
-import { Todo } from '../types/todo';
+import { Task, Priority } from '../types';
 
 const DailyTasks = () => {
-  const [todos, setTodos] = useState<Todo[]>([]);
+  const [todos, setTodos] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showNewTaskModal, setShowNewTaskModal] = useState(false);
   const [newTask, setNewTask] = useState({
     title: '',
     description: '',
-    priority: 'low' as 'low' | 'medium' | 'high',
+    priority: 'low' as Priority,
     estimated_duration: 30
   });
 
@@ -66,7 +66,7 @@ const DailyTasks = () => {
     }
   };
 
-  const handleUpdateTodo = (updatedTodo: Todo) => {
+  const handleUpdateTodo = (updatedTodo: Task) => {
     setTodos(todos.map(todo => 
       todo.id === updatedTodo.id ? updatedTodo : todo
     ));
@@ -163,7 +163,7 @@ const DailyTasks = () => {
                 </label>
                 <select
                   value={newTask.priority}
-                  onChange={(e) => setNewTask({ ...newTask, priority: e.target.value as 'low' | 'medium' | 'high' })}
+                  onChange={(e) => setNewTask({ ...newTask, priority: e.target.value as Priority })}
                   className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
                   <option value="low">Low</option>
