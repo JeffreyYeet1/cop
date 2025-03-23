@@ -11,8 +11,7 @@ def create_todo(todo: TodoCreate, user_id: int):
             "title": todo.title,
             "description": todo.description,
             "priority": todo.priority,
-            "estimated_duration": todo.estimated_duration,
-            "progress": todo.progress
+            "estimated_duration": todo.estimated_duration
         }
         print(f"Formatted data for database: {data}")
         result = repo_create_todo(data)
