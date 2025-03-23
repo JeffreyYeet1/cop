@@ -71,6 +71,32 @@ class PekaService:
     async def handle_query(self, query: str) -> Dict:
         """Handle any type of query and return a unified response using a single Cohere API call."""
         try:
+            # First, detect the intent
+            intent = self.detect_query_intent(query)
+            logger.info(f"Detected intent: {intent}")
+
+            # If it's a general query, handle it differently
+            if intent == "general":
+                try:
+                    general_response = await self.handle_general_query(query)
+                    return {
+                        "intent": "general",
+                        "task_details": None,
+                        "message": general_response.response,
+                        "action_items": general_response.action_items,
+                        "timestamp": datetime.utcnow().isoformat()
+                    }
+                except Exception as e:
+                    logger.error(f"Failed to handle general query: {str(e)}")
+                    return {
+                        "intent": "general",
+                        "task_details": None,
+                        "message": "I'm here to help! What would you like to know about productivity or task management?",
+                        "action_items": ["Ask about productivity tips", "Get help with task management", "Learn about time management"],
+                        "timestamp": datetime.utcnow().isoformat()
+                    }
+
+            # For create and analyze intents, proceed with the existing prompt
             prompt = f"""You are Peka, a friendly AI assistant. The user said: "{query}"
 
 Figure out what they want and respond in JSON format. They might use casual language, typos, or slang - that's okay!
@@ -161,7 +187,7 @@ For "general" intent:
     "action_items": ["Create a daily schedule", "Take regular breaks", "Set clear goals"]
 }}
 
-IMPORTANT: Your response must be a complete, valid JSON object. Do not include any text before or after the JSON. Do not use markdown code blocks."""
+IMPORTANT: Your response must be a complete, valid JSON object. Do not include any text before or after the JSON. Do not use markdown code blocks. Do not include any comments in the JSON."""
 
             try:
                 # Single API call to handle everything
