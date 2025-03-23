@@ -91,7 +91,7 @@ const DailyTasks = () => {
       {/* Add Task Button */}
       <div className="mb-6">
         <button 
-          onClick={handleAddTask}
+          onClick={() => setShowNewTaskModal(true)}
           className="w-72 bg-white p-4 rounded-2xl shadow-md border flex items-center gap-2 text-gray-500 hover:bg-gray-50 transition-colors"
         >
           <Plus size={20} />
