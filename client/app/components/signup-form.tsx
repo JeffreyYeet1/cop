@@ -152,7 +152,7 @@ export function SignUpForm() {
   };
 
   return (
-    <Card>
+    <Card className="w-full shadow-sm">
       <CardContent className="pt-6">
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
