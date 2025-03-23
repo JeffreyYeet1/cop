@@ -1,6 +1,7 @@
 "use client";
-import React from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { 
   Home, 
   Coffee, 
@@ -10,16 +11,45 @@ import {
   Pencil,
   CalendarRange,
   MonitorSmartphone,
-  ChevronDown
+  ChevronDown,
+  LogOut
 } from 'lucide-react';
 
 const Sidebar = () => {
+  const router = useRouter();
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+
+  const handleLogout = () => {
+    // Clear the token from localStorage
+    localStorage.removeItem('token');
+    // Redirect to login page
+    router.push('/login');
+  };
+
   return (
     <div className="w-64 h-screen bg-white border-r p-6 flex flex-col">
-      {/* Company Name */}
-      <div className="flex items-center gap-2 mb-8">
-        <span className="text-xl font-semibold text-gray-700">Clash of Plans</span>
-        <ChevronDown size={20} className="text-gray-500" />
+      {/* Company Name with Dropdown */}
+      <div className="relative">
+        <button 
+          className="flex items-center gap-2 mb-8 cursor-pointer"
+          onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+        >
+          <span className="text-xl font-semibold text-gray-700">Clash of Plans</span>
+          <ChevronDown size={20} className="text-gray-500" />
+        </button>
+        
+        {/* Dropdown Menu */}
+        {isDropdownOpen && (
+          <div className="absolute top-10 left-0 w-48 bg-white rounded-md shadow-lg z-10 border">
+            <button 
+              onClick={handleLogout}
+              className="flex items-center gap-2 w-full px-4 py-2 text-left text-gray-700 hover:bg-gray-100"
+            >
+              <LogOut size={16} />
+              <span>Logout</span>
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Main Navigation */}
