@@ -10,6 +10,35 @@ interface GeneralResponse {
   timestamp: string;
 }
 
+interface Task {
+  id: number;
+  user_id: string;
+  title: string;
+  description: string;
+  priority: 'low' | 'medium' | 'high';
+  estimated_duration: number;
+  created_at: string;
+  progress: 'not_started' | 'in_progress' | 'completed';
+}
+
+interface TaskResponse {
+  sorted_tasks: number[];
+  top_recommendation: {
+    task_id: number;
+    reason: string;
+  };
+  explanation: string;
+}
+
+interface TaskCreationResponse {
+  task_id: number;
+  title: string;
+  description: string;
+  priority: 'low' | 'medium' | 'high';
+  estimated_duration: number;
+  message: string;
+}
+
 interface ApiError {
   detail: string;
   message?: string;
@@ -18,9 +47,22 @@ interface ApiError {
 export default function PekaCommandPalette() {
   const [isOpen, setIsOpen] = useState(false);
   const [query, setQuery] = useState('');
-  const [response, setResponse] = useState<GeneralResponse | null>(null);
+  const [response, setResponse] = useState<GeneralResponse | TaskResponse | TaskCreationResponse | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const overlayRef = useRef<HTMLDivElement>(null);
+
+  // Keywords that indicate different intents
+  const taskAnalysisKeywords = [
+    'organize', 'organise', 'sort', 'prioritize', 'prioritise',
+    'arrange', 'order', 'manage', 'plan', 'schedule',
+    'tasks', 'todo', 'to-do', 'todos', 'to-dos'
+  ];
+
+  const taskCreationKeywords = [
+    'create', 'add', 'new', 'make', 'set up',
+    'schedule', 'add to my list', 'add to my tasks',
+    'remind me to', 'need to', 'should', 'have to'
+  ];
 
   useEffect(() => {
     const down = (e: KeyboardEvent) => {
@@ -41,6 +83,44 @@ export default function PekaCommandPalette() {
     }
   };
 
+  const detectQueryIntent = (query: string): 'analyze' | 'create' | 'general' => {
+    const lowerQuery = query.toLowerCase();
+    
+    if (taskAnalysisKeywords.some(keyword => lowerQuery.includes(keyword))) {
+      return 'analyze';
+    }
+    
+    if (taskCreationKeywords.some(keyword => lowerQuery.includes(keyword))) {
+      return 'create';
+    }
+    
+    return 'general';
+  };
+
+  const fetchUserTasks = async (token: string): Promise<Task[]> => {
+    try {
+      console.log('Fetching tasks from server...');
+      const response = await fetch('http://localhost:8000/api/todo/', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error('Failed to fetch tasks:', errorData);
+        throw new Error(errorData.detail || 'Failed to fetch tasks');
+      }
+
+      const data = await response.json();
+      console.log('Fetched tasks:', data);
+      return data;
+    } catch (error) {
+      console.error('Error fetching tasks:', error);
+      throw error;
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!query.trim()) return;
@@ -55,12 +135,42 @@ export default function PekaCommandPalette() {
       console.log('Sending query to Peka:', query.trim());
       console.log('Using token:', token.substring(0, 10) + '...');
 
-      const requestBody = {
-        query: query.trim()
-      };
-      console.log('Request body:', requestBody);
+      const intent = detectQueryIntent(query.trim());
+      let requestBody;
 
-      const response = await fetch('/api/peka/query', {
+      if (intent === 'analyze') {
+        // Fetch user's tasks first
+        const tasks = await fetchUserTasks(token);
+        // Format tasks to match server's expected schema
+        requestBody = {
+          tasks: tasks.map(task => ({
+            id: task.id,
+            user_id: String(task.user_id),
+            title: task.title,
+            description: task.description,
+            priority: task.priority,
+            estimated_duration: task.estimated_duration || 0,
+            created_at: task.created_at,
+            progress: task.progress || 'not_started'
+          }))
+        };
+      } else {
+        requestBody = { query: query.trim() };
+      }
+
+      console.log('Request body:', JSON.stringify(requestBody, null, 2));
+
+      // Determine which endpoint to use based on query intent
+      const endpoint = intent === 'analyze' 
+        ? 'http://localhost:8000/api/peka/analyze'
+        : intent === 'create'
+        ? 'http://localhost:8000/api/peka/create-task'
+        : 'http://localhost:8000/api/peka/query';
+
+      console.log('Using endpoint:', endpoint);
+      console.log('Detected intent:', intent);
+
+      const response = await fetch(endpoint, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -88,7 +198,16 @@ export default function PekaCommandPalette() {
       }
       
       const data = await response.json();
-      console.log('Success response:', data);
+      console.log('Raw response data:', data);
+      console.log('Response type:', typeof data);
+      console.log('Response keys:', Object.keys(data));
+
+      // Ensure the response matches our expected format
+      if (intent === 'analyze' && !('sorted_tasks' in data)) {
+        console.error('Invalid analyze response format:', data);
+        throw new Error('Invalid response format from analyze endpoint');
+      }
+
       setResponse(data);
       setQuery(''); // Clear input after successful response
     } catch (error) {
@@ -97,9 +216,95 @@ export default function PekaCommandPalette() {
         response: error instanceof Error ? error.message : "Failed to process your request. Please try again.",
         action_items: [],
         timestamp: new Date().toISOString()
-      });
+      } as GeneralResponse);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const renderResponse = () => {
+    if (!response) return null;
+
+    if ('action_items' in response) {
+      // General response
+      return (
+        <div className="flex items-start gap-3">
+          <div className="p-2 bg-blue-50 rounded-full">
+            <Sparkles className="text-blue-500" size={20} />
+          </div>
+          <div className="flex-1">
+            <p className="text-gray-800">{response.response}</p>
+            {response.action_items.length > 0 && (
+              <div className="mt-4">
+                <h4 className="text-sm font-medium text-gray-700 mb-2">Action Items:</h4>
+                <ul className="list-disc list-inside space-y-1">
+                  {response.action_items.map((item, index) => (
+                    <li key={index} className="text-gray-600 text-sm">{item}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            <p className="text-xs text-gray-500 mt-4">
+              {new Date(response.timestamp).toLocaleTimeString()}
+            </p>
+          </div>
+        </div>
+      );
+    } else if ('sorted_tasks' in response) {
+      // Task analysis response
+      return (
+        <div className="flex items-start gap-3">
+          <div className="p-2 bg-blue-50 rounded-full">
+            <Sparkles className="text-blue-500" size={20} />
+          </div>
+          <div className="flex-1">
+            <p className="text-gray-800">{response.explanation}</p>
+            <div className="mt-4">
+              <h4 className="text-sm font-medium text-gray-700 mb-2">Top Recommendation:</h4>
+              <p className="text-gray-600 text-sm">{response.top_recommendation.reason}</p>
+            </div>
+            <div className="mt-4">
+              <h4 className="text-sm font-medium text-gray-700 mb-2">Task Order:</h4>
+              <ol className="list-decimal list-inside space-y-1">
+                {response.sorted_tasks.map((taskId, index) => (
+                  <li key={index} className="text-gray-600 text-sm">Task {taskId}</li>
+                ))}
+              </ol>
+            </div>
+          </div>
+        </div>
+      );
+    } else {
+      // Task creation response
+      return (
+        <div className="flex items-start gap-3">
+          <div className="p-2 bg-blue-50 rounded-full">
+            <Sparkles className="text-blue-500" size={20} />
+          </div>
+          <div className="flex-1">
+            <p className="text-gray-800">{response.message}</p>
+            <div className="mt-4">
+              <h4 className="text-sm font-medium text-gray-700 mb-2">Created Task:</h4>
+              <div className="bg-gray-50 rounded-lg p-4">
+                <p className="font-medium text-gray-800">{response.title}</p>
+                <p className="text-gray-600 text-sm mt-1">{response.description}</p>
+                <div className="flex items-center gap-2 mt-2">
+                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                    response.priority === 'high' ? 'bg-red-100 text-red-800' :
+                    response.priority === 'medium' ? 'bg-yellow-100 text-yellow-800' :
+                    'bg-green-100 text-green-800'
+                  }`}>
+                    {response.priority}
+                  </span>
+                  <span className="text-gray-500 text-xs">
+                    {response.estimated_duration} minutes
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
     }
   };
 
@@ -161,27 +366,7 @@ export default function PekaCommandPalette() {
                     exit={{ opacity: 0, y: -10 }}
                     className="bg-white rounded-2xl shadow-xl border border-gray-200 p-6"
                   >
-                    <div className="flex items-start gap-3">
-                      <div className="p-2 bg-blue-50 rounded-full">
-                        <Sparkles className="text-blue-500" size={20} />
-                      </div>
-                      <div className="flex-1">
-                        <p className="text-gray-800">{response.response}</p>
-                        {response.action_items.length > 0 && (
-                          <div className="mt-4">
-                            <h4 className="text-sm font-medium text-gray-700 mb-2">Action Items:</h4>
-                            <ul className="list-disc list-inside space-y-1">
-                              {response.action_items.map((item, index) => (
-                                <li key={index} className="text-gray-600 text-sm">{item}</li>
-                              ))}
-                            </ul>
-                          </div>
-                        )}
-                        <p className="text-xs text-gray-500 mt-4">
-                          {new Date(response.timestamp).toLocaleTimeString()}
-                        </p>
-                      </div>
-                    </div>
+                    {renderResponse()}
                   </motion.div>
                 )}
               </AnimatePresence>
