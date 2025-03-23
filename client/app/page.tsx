@@ -3,8 +3,11 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { Calendar, Brain, ArrowRight } from 'lucide-react';
+import { Calendar, Brain, ArrowRight, Timer, BarChart } from 'lucide-react';
 import NavBar from './components/navbar';
+import PekaButton from './components/peka-button';
+import DailyTasks from './components/daily-tasks';
+import CalendarComponent from './components/calendar';
 
 export default function HomePage() {
   return (

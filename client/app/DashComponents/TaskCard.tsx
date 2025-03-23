@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { Clock, Trash2, Pencil, Check, GripVertical, X } from "lucide-react";
+import { Clock, Trash2, Pencil, Check, GripVertical, X, Edit2 } from "lucide-react";
 import { todoService } from '../services/todoService';
 import { Task } from '../types';
 
@@ -11,24 +11,24 @@ const getPriorityColor = (priority: Priority) => {
   switch (priority) {
     case 'low':
       return {
-        bg: 'bg-green-50',
-        text: 'text-green-600',
-        border: 'border-green-200',
-        hover: 'hover:bg-green-100 hover:border-green-300'
+        bg: 'bg-violet-50',
+        text: 'text-violet-600',
+        border: 'border-violet-200',
+        hover: 'hover:bg-violet-100 hover:border-violet-300'
       };
     case 'medium':
       return {
-        bg: 'bg-blue-50',
-        text: 'text-blue-600',
-        border: 'border-blue-200',
-        hover: 'hover:bg-blue-100 hover:border-blue-300'
+        bg: 'bg-amber-50',
+        text: 'text-amber-600',
+        border: 'border-amber-200',
+        hover: 'hover:bg-amber-100 hover:border-amber-300'
       };
     case 'high':
       return {
-        bg: 'bg-red-50',
-        text: 'text-red-600',
-        border: 'border-red-200',
-        hover: 'hover:bg-red-100 hover:border-red-300'
+        bg: 'bg-rose-50',
+        text: 'text-rose-600',
+        border: 'border-rose-200',
+        hover: 'hover:bg-rose-100 hover:border-rose-300'
       };
     default:
       return {
@@ -114,19 +114,19 @@ const TaskCard: React.FC<TaskCardProps> = ({
           <input
             value={editedTitle}
             onChange={(e) => setEditedTitle(e.target.value)}
-            className="w-full px-3 py-2 mb-2 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-400 bg-white/80 transition-all duration-200"
+            className="w-full px-3 py-2 mb-2 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-violet-400 bg-white/80 transition-all duration-200"
             autoFocus
           />
           <textarea
             value={editedDescription}
             onChange={(e) => setEditedDescription(e.target.value)}
-            className="w-full px-3 py-2 mb-2 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-400 bg-white/80 transition-all duration-200"
+            className="w-full px-3 py-2 mb-2 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-violet-400 bg-white/80 transition-all duration-200"
             rows={2}
           />
           <select
             value={editedPriority}
             onChange={(e) => setEditedPriority(e.target.value as Priority)}
-            className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 transition-all duration-200"
+            className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-400 transition-all duration-200"
           >
             <option value="low">Low Priority</option>
             <option value="medium">Medium Priority</option>
@@ -135,7 +135,7 @@ const TaskCard: React.FC<TaskCardProps> = ({
           <div className="flex gap-2 pt-2">
             <button
               onClick={handleUpdate}
-              className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-all duration-200 hover:shadow-md transform hover:-translate-y-1 flex-1"
+              className="px-4 py-2 bg-violet-500 text-white rounded-lg hover:bg-violet-600 transition-all duration-200 hover:shadow-md transform hover:-translate-y-1 flex-1"
             >
               Save Changes
             </button>
@@ -156,14 +156,14 @@ const TaskCard: React.FC<TaskCardProps> = ({
                 onClick={handleToggleComplete}
                 className={`w-5 h-5 rounded-full border flex items-center justify-center transition-all duration-300 transform hover:scale-110 ${
                   isCompleted 
-                    ? 'bg-blue-500 border-blue-500 scale-105' 
-                    : 'border-gray-300 hover:border-blue-400'
+                    ? 'bg-violet-500 border-violet-500 scale-105' 
+                    : 'border-gray-300 hover:border-violet-400'
                 }`}
               >
                 {isCompleted && <Check size={12} className="text-white animate-fadeIn" />}
               </button>
               <h3
-                className={`font-medium text-gray-900 text-lg hover:text-blue-600 transition-all duration-200 ${isCompleted ? 'line-through text-gray-400' : ''}`}
+                className={`font-medium text-gray-900 text-lg hover:text-violet-600 transition-all duration-200 ${isCompleted ? 'line-through text-gray-400' : ''}`}
               >
                 {title}
               </h3>
@@ -179,13 +179,13 @@ const TaskCard: React.FC<TaskCardProps> = ({
               )}
               <button
                 onClick={() => setIsEditing(true)}
-                className="text-gray-400 hover:text-blue-500 transition-all duration-300 p-1.5 hover:bg-blue-50 rounded-lg transform hover:scale-110"
+                className="text-gray-400 hover:text-violet-500 transition-all duration-300 p-1.5 hover:bg-violet-50 rounded-lg transform hover:scale-110"
               >
-                <Pencil size={16} />
+                <Edit2 size={16} />
               </button>
               <button
                 onClick={onDelete}
-                className="text-gray-400 hover:text-red-500 transition-all duration-300 p-1.5 hover:bg-red-50 rounded-lg transform hover:scale-110"
+                className="text-gray-400 hover:text-rose-500 transition-all duration-300 p-1.5 hover:bg-rose-50 rounded-lg transform hover:scale-110"
               >
                 <Trash2 size={16} />
               </button>

@@ -40,7 +40,7 @@ const PekaButton: React.FC<PekaButtonProps> = ({ position = 'top-right', fixed =
         onClick={handlePekaClick}
       >
         {/* Rainbow gradient border - made thicker and more vibrant */}
-        <div className="absolute -inset-[2px] bg-gradient-to-r from-indigo-500 via-sky-500 to-violet-500 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 animate-gradient-rotate" />
+        <div className="absolute -inset-[2px] bg-gradient-to-r from-violet-500 via-fuchsia-500 to-rose-500 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 animate-gradient-rotate" />
         
         {/* Inner white border for contrast */}
         <div className="absolute -inset-[1px] bg-white rounded-xl" />
@@ -49,7 +49,7 @@ const PekaButton: React.FC<PekaButtonProps> = ({ position = 'top-right', fixed =
         <div className="relative bg-white/80 backdrop-blur-sm rounded-xl px-4 py-2">
           <div className="text-sm text-gray-500 flex items-center space-x-2 group-hover:translate-x-0.5 transition-all duration-500">
             <span className="group-hover:text-gray-600 transition-colors duration-300">Press</span>
-            <kbd className="px-2 py-1 bg-white rounded-md text-sky-500 font-mono shadow-sm border border-sky-100 group-hover:scale-110 transition-all duration-300">⌘O</kbd>
+            <kbd className="px-2 py-1 bg-white rounded-md text-violet-500 font-mono shadow-sm border border-violet-100 group-hover:scale-110 transition-all duration-300">⌘O</kbd>
             <span className="group-hover:text-gray-600 transition-colors duration-300">to talk to Peka</span>
           </div>
         </div>

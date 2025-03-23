@@ -21,10 +21,10 @@ const initialEvents: CalendarEvent[] = [
 
 const getEventColor = (color: string) => {
   const colors = {
-    blue: 'bg-blue-100 border-blue-300 text-blue-800 hover:bg-blue-200',
-    green: 'bg-green-100 border-green-300 text-green-800 hover:bg-green-200',
-    purple: 'bg-purple-100 border-purple-300 text-purple-800 hover:bg-purple-200',
-    orange: 'bg-orange-100 border-orange-300 text-orange-800 hover:bg-orange-200',
+    blue: 'bg-violet-100 border-violet-300 text-violet-800 hover:bg-violet-200',
+    green: 'bg-emerald-100 border-emerald-300 text-emerald-800 hover:bg-emerald-200',
+    purple: 'bg-fuchsia-100 border-fuchsia-300 text-fuchsia-800 hover:bg-fuchsia-200',
+    orange: 'bg-amber-100 border-amber-300 text-amber-800 hover:bg-amber-200',
   };
   return colors[color as keyof typeof colors] || colors.blue;
 };
@@ -100,16 +100,16 @@ const Calendar: React.FC = () => {
     const newTime = minutesToTime(newTimeInMinutes);
     
     // Show a visual indicator
-    e.currentTarget.classList.add('bg-blue-50');
+    e.currentTarget.classList.add('bg-violet-50');
   };
 
   const handleDragLeave = (e: React.DragEvent) => {
-    e.currentTarget.classList.remove('bg-blue-50');
+    e.currentTarget.classList.remove('bg-violet-50');
   };
 
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
-    e.currentTarget.classList.remove('bg-blue-50');
+    e.currentTarget.classList.remove('bg-violet-50');
     
     if (!draggedEvent) return;
     
@@ -155,18 +155,18 @@ const Calendar: React.FC = () => {
       <div className="flex justify-between items-center mb-6 animate-fadeIn" style={{animationDelay: "0.1s"}}>
         <div>
           <div className="flex items-center space-x-2 mb-1">
-            <div className="w-3 h-3 bg-purple-500 rounded-full animate-pulse"></div>
-            <h2 className="text-xl font-bold text-gray-900 group-hover:text-purple-600 transition-all duration-300">Calendar</h2>
+            <div className="w-3 h-3 bg-violet-500 rounded-full animate-pulse"></div>
+            <h2 className="text-xl font-bold text-gray-900 group-hover:text-violet-600 transition-all duration-300">Calendar</h2>
           </div>
           <p className="text-gray-500 ml-5">{dayName}, {monthDay}</p>
         </div>
 
         <div className="flex items-center space-x-3">
-          <button className="inline-flex items-center gap-1 px-3 py-1.5 text-sm font-medium rounded-full bg-purple-50 text-purple-600 border border-purple-100 hover:bg-purple-100 transition-all duration-300 transform hover:-translate-y-1">
+          <button className="inline-flex items-center gap-1 px-3 py-1.5 text-sm font-medium rounded-full bg-violet-50 text-violet-600 border border-violet-100 hover:bg-violet-100 transition-all duration-300 transform hover:-translate-y-1">
             <Users size={14} className="mr-1" />
             Calendars
           </button>
-          <button className="inline-flex items-center gap-1 px-3 py-1.5 text-sm font-medium rounded-full bg-white text-purple-600 border border-purple-200 hover:bg-purple-50 transition-all duration-300 transform hover:-translate-y-1">
+          <button className="inline-flex items-center gap-1 px-3 py-1.5 text-sm font-medium rounded-full bg-white text-violet-600 border border-violet-200 hover:bg-violet-50 transition-all duration-300 transform hover:-translate-y-1">
             <Plus size={14} className="mr-1" />
             New Event
           </button>
@@ -184,7 +184,7 @@ const Calendar: React.FC = () => {
           </button>
         </div>
         <div className="flex items-center text-sm text-gray-500">
-          <Sparkles size={14} className="mr-1.5 text-purple-500" />
+          <Sparkles size={14} className="mr-1.5 text-violet-500" />
           Today's Schedule
         </div>
       </div>
@@ -194,7 +194,7 @@ const Calendar: React.FC = () => {
         {hours.map((hour, index) => (
           <div 
             key={hour.label} 
-            className="flex py-3 border-b border-gray-100 relative"
+            className="flex py-3 border-b border-gray-100 relative group"
             style={{animationDelay: `${0.3 + index * 0.05}s`}}
             data-animate="fadeIn"
           >
@@ -203,7 +203,7 @@ const Calendar: React.FC = () => {
             </div>
             
             <div 
-              className="flex-1 min-h-[60px] relative transition-colors duration-200"
+              className="flex-1 min-h-[60px] relative transition-colors duration-200 group-hover:bg-violet-50/30"
               onDragOver={handleDragOver}
               onDragLeave={handleDragLeave}
               onDrop={handleDrop}

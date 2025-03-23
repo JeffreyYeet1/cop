@@ -121,7 +121,7 @@ const DailyTasks = () => {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-full">
-        <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
+        <Loader2 className="w-8 h-8 animate-spin text-violet-500" />
       </div>
     );
   }
@@ -129,7 +129,7 @@ const DailyTasks = () => {
   if (error) {
     return (
       <div className="flex items-center justify-center h-full">
-        <div className="text-red-500 bg-red-50 dark:bg-red-900/20 px-4 py-2 rounded-lg">
+        <div className="text-rose-500 bg-rose-50 dark:bg-rose-900/20 px-4 py-2 rounded-lg">
           {error}
         </div>
       </div>
@@ -137,13 +137,16 @@ const DailyTasks = () => {
   }
 
   return (
-    <div className="p-5 min-h-full bg-white">
+    <div className="p-5 min-h-full bg-white/80 backdrop-blur-sm">
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
-        <h2 className="text-2xl font-semibold text-gray-900">Todo</h2>
+        <div className="flex items-center space-x-2">
+          <div className="w-3 h-3 bg-violet-500 rounded-full animate-pulse"></div>
+          <h2 className="text-2xl font-semibold text-gray-900">Todo</h2>
+        </div>
         <button
           onClick={() => setShowNewTaskModal(true)}
-          className="inline-flex items-center gap-2 px-4 py-2 bg-sky-50 text-sky-600 rounded-xl hover:bg-sky-100 transition-all duration-300 shadow-sm hover:shadow-md transform hover:-translate-y-1"
+          className="inline-flex items-center gap-2 px-4 py-2 bg-violet-50 text-violet-600 rounded-xl hover:bg-violet-100 transition-all duration-300 shadow-sm hover:shadow-md transform hover:-translate-y-1"
         >
           <Plus size={16} />
           <span className="text-sm font-medium">Add Task</span>
@@ -152,15 +155,15 @@ const DailyTasks = () => {
 
       {todos.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-12 animate-fadeIn" style={{animationDelay: "0.3s"}}>
-          <div className="w-14 h-14 bg-blue-50 rounded-full flex items-center justify-center mb-3 transform hover:scale-110 transition-all duration-300">
-            <Plus size={20} className="text-blue-500" />
+          <div className="w-14 h-14 bg-violet-50 rounded-full flex items-center justify-center mb-3 transform hover:scale-110 transition-all duration-300">
+            <Plus size={20} className="text-violet-500" />
           </div>
           <div className="text-gray-500 mb-3 text-center">
             No tasks for today. Click "Add Task" to add one!
           </div>
           <button 
             onClick={() => setShowNewTaskModal(true)}
-            className="text-blue-500 hover:text-blue-600 font-medium transition-all duration-300 transform hover:-translate-y-1"
+            className="text-violet-500 hover:text-violet-600 font-medium transition-all duration-300 transform hover:-translate-y-1"
           >
             Create your first task
           </button>
@@ -211,7 +214,7 @@ const DailyTasks = () => {
                   type="text"
                   value={newTask.title}
                   onChange={(e) => setNewTask({ ...newTask, title: e.target.value })}
-                  className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-500/50 transition-all duration-200"
+                  className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-violet-500/50 transition-all duration-200"
                   placeholder="Enter task title"
                   required
                 />
@@ -223,7 +226,7 @@ const DailyTasks = () => {
                 <textarea
                   value={newTask.description}
                   onChange={(e) => setNewTask({ ...newTask, description: e.target.value })}
-                  className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-500/50 transition-all duration-200"
+                  className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-violet-500/50 transition-all duration-200"
                   placeholder="Enter task description"
                   rows={3}
                 />
@@ -236,7 +239,7 @@ const DailyTasks = () => {
                   <select
                     value={newTask.priority}
                     onChange={(e) => setNewTask({ ...newTask, priority: e.target.value as Priority })}
-                    className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-500/50 transition-all duration-200"
+                    className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-violet-500/50 transition-all duration-200"
                   >
                     <option value="low">Low</option>
                     <option value="medium">Medium</option>
@@ -251,7 +254,7 @@ const DailyTasks = () => {
                     type="number"
                     value={newTask.estimated_duration}
                     onChange={(e) => setNewTask({ ...newTask, estimated_duration: parseInt(e.target.value) })}
-                    className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-500/50 transition-all duration-200"
+                    className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-violet-500/50 transition-all duration-200"
                     min="1"
                   />
                 </div>
@@ -266,7 +269,7 @@ const DailyTasks = () => {
                 </button>
                 <button
                   type="submit"
-                  className="px-6 py-2.5 bg-sky-500 text-white rounded-xl hover:bg-sky-600 transition-all duration-200"
+                  className="px-6 py-2.5 bg-violet-500 text-white rounded-xl hover:bg-violet-600 transition-all duration-200"
                 >
                   Create Task
                 </button>

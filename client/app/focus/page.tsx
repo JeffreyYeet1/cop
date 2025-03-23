@@ -5,29 +5,30 @@ import PomodoroTimer from '../DashComponents/PomodoroTimer';
 
 export default function FocusPage() {
   return (
-    <div className="flex min-h-screen relative overflow-hidden">
-      {/* Full screen gradient background */}
-      <div className="fixed inset-0 bg-gradient-to-br from-sky-50 via-white to-sky-100 animate-gradient z-0" />
+    <div className="relative overflow-hidden min-h-screen bg-gradient-to-br from-violet-50 via-white to-violet-100">
+      {/* Animated gradient background */}
+      <div className="fixed inset-0 bg-gradient-to-br from-violet-50 via-white to-violet-100 animate-gradient-slow"></div>
       
       {/* Sidebar */}
-      <div className="fixed top-0 left-0 bottom-0 w-[240px] z-20">
+      <div className="fixed inset-y-0 left-0 w-64 bg-white/80 backdrop-blur-md border-r border-violet-100 z-20">
         <Sidebar />
       </div>
 
-      {/* Main Content */}
-      <main className="flex-1 ml-[240px] relative z-10">
-        {/* Header */}
-        <div className="flex justify-center items-center p-8 animate-fadeIn" style={{animationDelay: "0.1s"}}>
-          <h1 className="text-4xl font-bold text-gray-900">Focus Mode</h1>
-        </div>
+      {/* Main content */}
+      <div className="ml-64 p-8 min-h-screen relative z-10">
+        <div className="max-w-4xl mx-auto">
+          {/* Header */}
+          <div className="text-center mb-12">
+            <h1 className="text-4xl font-bold text-gray-900 mb-2 transform transition-all duration-1000 hover:scale-105">Focus Mode</h1>
+            <p className="text-gray-600 transform transition-all duration-1000 hover:text-violet-600">Stay focused and boost your productivity</p>
+          </div>
 
-        {/* Focus Timer Container */}
-        <div className="flex-1 flex items-center justify-center min-h-[calc(100vh-5rem)]">
-          <div className="w-full max-w-3xl mx-auto px-8">
+          {/* Timer */}
+          <div>
             <PomodoroTimer />
           </div>
         </div>
-      </main>
+      </div>
     </div>
   );
 }
