@@ -3,14 +3,14 @@
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 
+
 const PopImageSection = () => {
   const sectionRef = useRef<HTMLDivElement>(null);
   const [scale, setScale] = useState(1);
-  const [opacity, setOpacity] = useState(0);
+
 
   useEffect(() => {
     // Fade in effect on load
-    setOpacity(1);
 
     const handleScroll = () => {
       if (!sectionRef.current) return;
@@ -31,7 +31,7 @@ const PopImageSection = () => {
   return (
     <div 
       ref={sectionRef}
-      className="relative w-full h-[100vh] overflow-hidden flex items-center justify-center"
+      className="relative w-full h-[100vh] overflow-hidden flex items-center justify-center bg-gray-100"
     >
       <div 
         className="absolute inset-0 transition-all duration-100 ease-out"
@@ -39,17 +39,14 @@ const PopImageSection = () => {
           transform: `scale(${scale})`,
         }}
       >
-        <Image
-          src="/image.png"
-          alt="Demo Image"
-          fill
-          className="object-cover"
-          priority
-        />
+        <div className="w-full h-full bg-gradient-to-r from-blue-500 to-purple-500 opacity-20" />
       </div>
-      <div className="absolute inset-0 bg-gradient-to-b from-background/0 via-background/50 to-background">
+      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-white">
         <div className="container h-full flex items-center justify-center">
-          {/* Empty content - removed as requested */}
+          <div className="text-center">
+            <h2 className="text-4xl font-bold text-gray-900 mb-4">Smart Scheduling</h2>
+            <p className="text-xl text-gray-600">Let AI handle your calendar conflicts</p>
+          </div>
         </div>
       </div>
     </div>
