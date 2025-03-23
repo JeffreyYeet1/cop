@@ -14,18 +14,20 @@ interface CalendarEvent {
 }
 
 const initialEvents: CalendarEvent[] = [
-  { id: 1, title: 'Product Meeting', time: '9:00', duration: 60, color: 'violet' },
-  { id: 2, title: 'Lunch with Team', time: '12:30', duration: 90, color: 'sky' },
-  { id: 3, title: 'Design Review', time: '15:00', duration: 45, color: 'violet' },
-  { id: 4, title: 'Client Call', time: '17:00', duration: 30, color: 'sky' }
+  { id: 1, title: 'Product Meeting', time: '9:00', duration: 60, color: 'blue' },
+  { id: 2, title: 'Lunch with Team', time: '12:30', duration: 90, color: 'green' },
+  { id: 3, title: 'Design Review', time: '15:00', duration: 45, color: 'purple' },
+  { id: 4, title: 'Client Call', time: '17:00', duration: 30, color: 'orange' }
 ];
 
 const getEventColor = (color: string) => {
   const colors = {
-    violet: 'bg-violet-100 border-violet-300 text-violet-800 hover:bg-violet-200',
-    sky: 'bg-sky-100 border-sky-300 text-sky-800 hover:bg-sky-200',
+    blue: 'bg-blue-100 border-blue-300 text-blue-800 hover:bg-blue-200',
+    green: 'bg-green-100 border-green-300 text-green-800 hover:bg-green-200',
+    purple: 'bg-purple-100 border-purple-300 text-purple-800 hover:bg-purple-200',
+    orange: 'bg-orange-100 border-orange-300 text-orange-800 hover:bg-orange-200',
   };
-  return colors[color as keyof typeof colors] || colors.violet;
+  return colors[color as keyof typeof colors] || colors.blue;
 };
 
 const getEventColorFromPriority = (priority: string) => {
@@ -187,7 +189,13 @@ const NewEventModal: React.FC<NewEventModalProps> = ({ isOpen, onClose, onSubmit
 const Calendar: React.FC = () => {
   const [events, setEvents] = useState<CalendarEvent[]>(initialEvents);
   const [draggedEvent, setDraggedEvent] = useState<CalendarEvent | null>(null);
-  const [isNewEventModalOpen, setIsNewEventModalOpen] = useState(false);
+  const [showNewEventModal, setShowNewEventModal] = useState(false);
+  const [newEvent, setNewEvent] = useState({
+    title: '',
+    time: '09:00',
+    duration: 30,
+    color: 'violet'
+  });
   
   const today = new Date();
   const dayName = today.toLocaleString('default', { weekday: 'long' });
@@ -328,39 +336,41 @@ const Calendar: React.FC = () => {
     setEvents(prev => prev.filter(event => event.id !== eventId));
   };
 
-  const handleNewEvent = (eventData: Omit<CalendarEvent, 'id'>) => {
-    const newEvent: CalendarEvent = {
-      ...eventData,
-      id: Date.now()
+  const handleCreateEvent = () => {
+    const newEventObj = {
+      id: events.length + 1,
+      ...newEvent
     };
-    setEvents(prev => [...prev, newEvent]);
+    setEvents([...events, newEventObj]);
+    setShowNewEventModal(false);
+    setNewEvent({ title: '', time: '09:00', duration: 30, color: 'violet' });
   };
 
   return (
     <>
       <div 
         className={`p-5 min-h-full bg-white overflow-hidden animate-fadeIn relative ${
-          isNewEventModalOpen ? 'blur-sm' : ''
+          showNewEventModal ? 'blur-sm' : ''
         } transition-all duration-300`}
       >
         {/* Header */}
         <div className="flex justify-between items-center mb-6 animate-fadeIn relative" style={{animationDelay: "0.1s"}}>
           <div>
             <div className="flex items-center space-x-2 mb-1">
-              <div className="w-3 h-3 bg-purple-500 rounded-full animate-pulse"></div>
-              <h2 className="text-xl font-bold text-gray-900 group-hover:text-purple-600 transition-all duration-300">Calendar</h2>
+              <div className="w-3 h-3 bg-violet-500 rounded-full animate-pulse"></div>
+              <h2 className="text-xl font-bold text-gray-900 group-hover:text-violet-600 transition-all duration-300">Calendar</h2>
             </div>
             <p className="text-gray-500 ml-5">{dayName}, {monthDay}</p>
           </div>
 
           <div className="flex items-center space-x-3">
-            <button className="inline-flex items-center gap-1 px-3 py-1.5 text-sm font-medium rounded-full bg-purple-50 text-purple-600 border border-purple-100 hover:bg-purple-100 transition-all duration-300 transform hover:-translate-y-1">
+            <button className="inline-flex items-center gap-1 px-3 py-1.5 text-sm font-medium rounded-full bg-violet-50 text-violet-600 border border-violet-100 hover:bg-violet-100 transition-all duration-300 transform hover:-translate-y-1">
               <Users size={14} className="mr-1" />
               Calendars
             </button>
             <button 
-              onClick={() => setIsNewEventModalOpen(true)}
-              className="inline-flex items-center gap-1 px-3 py-1.5 text-sm font-medium rounded-full bg-white text-purple-600 border border-purple-200 hover:bg-purple-50 transition-all duration-300 transform hover:-translate-y-1"
+              onClick={() => setShowNewEventModal(true)}
+              className="inline-flex items-center gap-1 px-3 py-1.5 text-sm font-medium rounded-full bg-white text-violet-600 border border-violet-200 hover:bg-violet-50 transition-all duration-300 transform hover:-translate-y-1"
             >
               <Plus size={14} className="mr-1" />
               New Event
@@ -379,7 +389,7 @@ const Calendar: React.FC = () => {
             </button>
           </div>
           <div className="flex items-center text-sm text-gray-500">
-            <Sparkles size={14} className="mr-1.5 text-purple-500" />
+            <Sparkles size={14} className="mr-1.5 text-violet-500" />
             Today's Schedule
           </div>
         </div>
@@ -456,11 +466,90 @@ const Calendar: React.FC = () => {
         </div>
       </div>
 
-      <NewEventModal
-        isOpen={isNewEventModalOpen}
-        onClose={() => setIsNewEventModalOpen(false)}
-        onSubmit={handleNewEvent}
-      />
+      {/* New Event Modal */}
+      {showNewEventModal && createPortal(
+        <>
+          <div className="fixed inset-0 backdrop-blur-sm bg-black/20" style={{ zIndex: 99998 }} />
+          <div className="fixed inset-0 flex items-center justify-center" style={{ zIndex: 99999 }}>
+            <div className="bg-white rounded-2xl p-6 w-full max-w-md shadow-xl">
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-xl font-semibold text-gray-900">Create New Event</h2>
+                <button 
+                  onClick={() => setShowNewEventModal(false)}
+                  className="text-gray-500 hover:text-gray-700"
+                >
+                  <X size={20} />
+                </button>
+              </div>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Event Title
+                  </label>
+                  <input
+                    type="text"
+                    value={newEvent.title}
+                    onChange={(e) => setNewEvent({...newEvent, title: e.target.value})}
+                    className="w-full px-4 py-2 rounded-xl border border-gray-200 focus:border-violet-500 focus:ring-1 focus:ring-violet-500"
+                    placeholder="Enter event title"
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Start Time
+                  </label>
+                  <input
+                    type="time"
+                    value={newEvent.time}
+                    onChange={(e) => setNewEvent({...newEvent, time: e.target.value})}
+                    className="w-full px-4 py-2 rounded-xl border border-gray-200 focus:border-violet-500 focus:ring-1 focus:ring-violet-500"
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Duration (minutes)
+                  </label>
+                  <input
+                    type="number"
+                    value={newEvent.duration}
+                    onChange={(e) => setNewEvent({...newEvent, duration: parseInt(e.target.value)})}
+                    className="w-full px-4 py-2 rounded-xl border border-gray-200 focus:border-violet-500 focus:ring-1 focus:ring-violet-500"
+                    min="15"
+                    step="15"
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Color
+                  </label>
+                  <select
+                    value={newEvent.color}
+                    onChange={(e) => setNewEvent({...newEvent, color: e.target.value})}
+                    className="w-full px-4 py-2 rounded-xl border border-gray-200 focus:border-violet-500 focus:ring-1 focus:ring-violet-500"
+                  >
+                    <option value="violet">Violet</option>
+                    <option value="sky">Sky Blue</option>
+                  </select>
+                </div>
+              </div>
+              
+              <div className="mt-6 flex justify-end space-x-3">
+                <button
+                  onClick={handleCreateEvent}
+                  className="px-6 py-2 bg-violet-500 text-white rounded-xl hover:bg-violet-600 transition-all duration-300"
+                  disabled={!newEvent.title}
+                >
+                  Create Event
+                </button>
+              </div>
+            </div>
+          </div>
+        </>,
+        document.getElementById('modal-root') || document.body
+      )}
     </>
   );
 };

@@ -138,6 +138,12 @@ const DailyTasks = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showNewTaskModal, setShowNewTaskModal] = useState(false);
+  const [newTask, setNewTask] = useState({
+    title: '',
+    description: '',
+    priority: 'medium' as Priority,
+    estimated_duration: 30
+  });
 
   const date = new Date();
   const dayName = date.toLocaleString('en-US', { weekday: 'long' });
@@ -232,6 +238,28 @@ const DailyTasks = () => {
     handleDragEnd(e);
   };
 
+  const handleCreateTask = async () => {
+    try {
+      const taskData = {
+        ...newTask,
+        user_id: 'current-user', // This should come from your auth context
+      };
+      
+      const createdTask = await todoService.createTodo(taskData);
+      setTodos(prevTodos => [...prevTodos, createdTask]);
+      setShowNewTaskModal(false);
+      setNewTask({
+        title: '',
+        description: '',
+        priority: 'medium' as Priority,
+        estimated_duration: 30
+      });
+    } catch (error) {
+      console.error('Error creating task:', error);
+      setError('Failed to create task');
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-full">
@@ -255,10 +283,13 @@ const DailyTasks = () => {
       <div className={`p-5 min-h-full bg-white ${showNewTaskModal ? 'blur-sm' : ''} transition-all duration-300`}>
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-2xl font-semibold text-gray-900">Todo</h2>
+          <div className="flex items-center space-x-2">
+            <div className="w-3 h-3 bg-violet-500 rounded-full animate-pulse"></div>
+            <h2 className="text-2xl font-semibold text-gray-900">Todo</h2>
+          </div>
           <button
             onClick={() => setShowNewTaskModal(true)}
-            className="inline-flex items-center gap-2 px-4 py-2 bg-sky-50 text-sky-600 rounded-xl hover:bg-sky-100 transition-all duration-300 shadow-sm hover:shadow-md transform hover:-translate-y-1"
+            className="inline-flex items-center gap-2 px-4 py-2 bg-violet-50 text-violet-600 rounded-xl hover:bg-violet-100 transition-all duration-300 shadow-sm hover:shadow-md transform hover:-translate-y-1"
           >
             <Plus size={16} />
             <span className="text-sm font-medium">Add Task</span>
@@ -302,11 +333,98 @@ const DailyTasks = () => {
         )}
       </div>
 
-      <NewTaskModal
-        isOpen={showNewTaskModal}
-        onClose={() => setShowNewTaskModal(false)}
-        onSubmit={handleAddTodo}
-      />
+      {showNewTaskModal && createPortal(
+        <>
+          <div className="fixed inset-0 backdrop-blur-sm bg-black/20" style={{ zIndex: 99998 }} />
+          <div className="fixed inset-0 flex items-center justify-center" style={{ zIndex: 99999 }}>
+            <div className="bg-white rounded-2xl p-6 w-full max-w-md shadow-xl">
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-xl font-semibold text-gray-900">Create New Task</h2>
+                <button 
+                  onClick={() => setShowNewTaskModal(false)}
+                  className="text-gray-500 hover:text-gray-700"
+                >
+                  <X size={20} />
+                </button>
+              </div>
+              
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Task Title
+                  </label>
+                  <input
+                    type="text"
+                    value={newTask.title}
+                    onChange={(e) => setNewTask({...newTask, title: e.target.value})}
+                    className="w-full px-4 py-2 rounded-xl border border-gray-200 focus:border-violet-500 focus:ring-1 focus:ring-violet-500"
+                    placeholder="Enter task title"
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Description
+                  </label>
+                  <textarea
+                    value={newTask.description}
+                    onChange={(e) => setNewTask({...newTask, description: e.target.value})}
+                    className="w-full px-4 py-2 rounded-xl border border-gray-200 focus:border-violet-500 focus:ring-1 focus:ring-violet-500"
+                    rows={3}
+                    placeholder="Enter task description"
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Priority
+                  </label>
+                  <select
+                    value={newTask.priority}
+                    onChange={(e) => setNewTask({...newTask, priority: e.target.value as Priority})}
+                    className="w-full px-4 py-2 rounded-xl border border-gray-200 focus:border-violet-500 focus:ring-1 focus:ring-violet-500"
+                  >
+                    <option value="low">Low</option>
+                    <option value="medium">Medium</option>
+                    <option value="high">High</option>
+                  </select>
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Estimated Duration (minutes)
+                  </label>
+                  <input
+                    type="number"
+                    value={newTask.estimated_duration}
+                    onChange={(e) => setNewTask({...newTask, estimated_duration: parseInt(e.target.value)})}
+                    className="w-full px-4 py-2 rounded-xl border border-gray-200 focus:border-violet-500 focus:ring-1 focus:ring-violet-500"
+                    min="5"
+                    step="5"
+                  />
+                </div>
+              </div>
+              
+              <div className="mt-6 flex justify-end space-x-3">
+                <button
+                  onClick={() => setShowNewTaskModal(false)}
+                  className="px-4 py-2 text-gray-700 hover:text-gray-900"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleCreateTask}
+                  className="px-6 py-2 bg-violet-500 text-white rounded-xl hover:bg-violet-600 transition-all duration-300"
+                  disabled={!newTask.title}
+                >
+                  Create Task
+                </button>
+              </div>
+            </div>
+          </div>
+        </>,
+        document.getElementById('modal-root') || document.body
+      )}
     </>
   );
 };

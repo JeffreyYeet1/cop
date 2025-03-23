@@ -22,9 +22,14 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning className={`${geistSans.variable} ${geistMono.variable} ${inter.className}`}>
-      <body className="antialiased min-h-screen bg-background">
+      <body className="antialiased min-h-screen flex flex-col items-center bg-background">
         <Providers>
-          {children}
+          <div className="page-transition-wrapper">
+            <div className="flex flex-col w-full">
+              {children}
+            </div>
+          </div>
+          <div id="modal-root" />
         </Providers>
       </body>
     </html>
