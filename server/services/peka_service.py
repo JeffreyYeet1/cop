@@ -96,62 +96,56 @@ IMPORTANT: You must classify the intent as one of these three:
 
 3. "general" - for ANY other type of query or question
 
+CRITICAL: For task creation, you MUST:
+1. Extract the EXACT time duration if mentioned by the user (e.g., "30 minutes", "2 hours", "1.5 hours")
+2. Convert the duration to minutes
+3. Use that exact duration in estimated_duration
+4. If no duration is specified, only then use a default of 30 minutes
+
 Examples:
 
-For "create" intent:
-- "Create a task for submitting my final report by tomorrow afternoon"
-- "I need to schedule a dentist appointment for next week"
-- "Add a reminder to call mom on her birthday"
-
-For "analyze" intent:
-- "What tasks should I do?"
-- "I'm lost, I need help prioritizing my tasks"
-- "How am I doing with my tasks?"
-- "What should I focus on today?"
-- "Check my progress"
-- "Show me my task statistics"
-- "What's my productivity like?"
-- "Help me organize my tasks"
-
-For "general" intent:
-- "Need Help Being Able To Focus On Studying"
-- "What Can I Do As A Break?"
-- "how to be more productive"
-- "what's the weather?"
-- "tell me a joke"
-
-IMPORTANT: Your response MUST be a valid JSON object with these exact fields:
-{{
-    "intent": "create|analyze|general",
-    "task_details": {{
-        "title": "string",
-        "description": "string",
-        "priority": "high|medium|low",
-        "estimated_duration": number
-    }} | null,
-    "message": "string",
-    "action_items": ["string"]
-}}
-
-For "create" intent, include task_details.
-For "analyze" and "general" intents, set task_details to null.
-
-Example responses:
-
-For "Create a task for submitting my final report by tomorrow afternoon":
+For "create" intent with duration:
+User: "Create a task for studying for 45 minutes"
 {{
     "intent": "create",
     "task_details": {{
-        "title": "Submit Final Report",
-        "description": "Complete and submit the final report by tomorrow afternoon",
+        "title": "Study Session",
+        "description": "Focused study session",
+        "priority": "medium",
+        "estimated_duration": 45
+    }},
+    "message": "I've created a task for your 45-minute study session.",
+    "action_items": ["Prepare study materials", "Find a quiet place", "Set a timer for 45 minutes"]
+}}
+
+User: "Add a 2 hour task for project planning"
+{{
+    "intent": "create",
+    "task_details": {{
+        "title": "Project Planning",
+        "description": "Detailed project planning session",
         "priority": "high",
         "estimated_duration": 120
     }},
-    "message": "I've created a high-priority task for submitting your final report. Since this is due tomorrow afternoon, I've set it as high priority and estimated 2 hours for completion.",
-    "action_items": ["Start working on the report now", "Review the requirements", "Set aside dedicated time tomorrow morning"]
+    "message": "I've created a task for 2 hours of project planning.",
+    "action_items": ["Gather project requirements", "Set up planning documents", "Schedule any necessary meetings"]
 }}
 
-For "What tasks should I do?":
+For "create" intent without duration (use default):
+User: "Create a task to call John"
+{{
+    "intent": "create",
+    "task_details": {{
+        "title": "Call John",
+        "description": "Make a phone call to John",
+        "priority": "medium",
+        "estimated_duration": 30
+    }},
+    "message": "I've created a task for calling John with a default duration of 30 minutes.",
+    "action_items": ["Prepare any topics to discuss", "Find a quiet time to call"]
+}}
+
+For "analyze" intent:
 {{
     "intent": "analyze",
     "task_details": null,
@@ -159,7 +153,7 @@ For "What tasks should I do?":
     "action_items": ["Review your task list", "Check task priorities", "Update task statuses"]
 }}
 
-For "how to be more productive":
+For "general" intent:
 {{
     "intent": "general",
     "task_details": null,

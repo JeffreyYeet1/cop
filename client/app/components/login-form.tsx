@@ -135,15 +135,15 @@ export function LoginForm() {
   };
 
   return (
-    <Card className="shadow-lg">
-      <CardContent className="pt-6">
+    <Card className="w-full bg-white/80 backdrop-blur-sm shadow-xl p-6">
+      <CardContent className="pt-0">
         <GoogleButton mode="login" className="mb-6" />
         <div className="relative mb-6">
           <div className="absolute inset-0 flex items-center">
             <div className="w-full border-t border-gray-300" />
           </div>
           <div className="relative flex justify-center text-sm">
-            <span className="bg-white px-2 text-gray-500">or continue with email</span>
+            <span className="bg-white/80 px-2 text-gray-500">or continue with email</span>
           </div>
         </div>
         <form onSubmit={handleSubmit} className="space-y-4">
