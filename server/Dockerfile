@@ -17,6 +17,7 @@ WORKDIR /server
 # Copy requirements and install dependencies
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir "PyJWT[crypto]"
 
 # Copy application code
 COPY . .
@@ -24,5 +25,5 @@ COPY . .
 # Expose port
 EXPOSE 8000
 
-# Run the application
+# Run the application with hot reload
 CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"] 

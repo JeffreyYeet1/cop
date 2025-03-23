@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import AppShell from '../components/AppShell';
+import AppShell from '../AppShell';
 
 export default function DashboardPage() {
   const router = useRouter();
