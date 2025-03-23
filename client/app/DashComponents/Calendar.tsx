@@ -150,7 +150,7 @@ const Calendar: React.FC = () => {
   };
 
   return (
-    <div className="p-5 min-h-full bg-white overflow-hidden animate-fadeIn">
+    <div className="p-5 min-h-full bg-white overflow-hidden animate-fadeIn relative z-10">
       {/* Header */}
       <div className="flex justify-between items-center mb-6 animate-fadeIn" style={{animationDelay: "0.1s"}}>
         <div>

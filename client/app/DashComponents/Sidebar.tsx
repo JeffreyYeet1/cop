@@ -28,57 +28,53 @@ const Sidebar = () => {
   ];
 
   return (
-    <aside className="w-56 bg-gray-900 text-white h-screen p-4 flex flex-col shadow-xl overflow-hidden">
-      <div className="mb-8 mt-3">
-        <h1 className="text-xl font-bold tracking-tight flex items-center gap-2 hover:text-blue-400 transition-all duration-300 transform hover:translate-x-1">
-          <Sparkles size={18} className="text-blue-400 animate-pulse-soft" />
-          <span>Clash of Plans</span>
-        </h1>
+    <div className="h-full bg-sky-500/60 backdrop-blur-md text-white flex flex-col">
+      {/* App Title */}
+      <div className="p-6 mb-4">
+        <div className="flex items-center space-x-2">
+          <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
+          <h1 className="text-lg font-semibold text-white">Clash of Plans</h1>
+        </div>
       </div>
-      
-      <nav className="flex-1">
-        <ul className="space-y-1">
+
+      {/* Navigation */}
+      <nav className="flex-1 px-4">
+        <div className="space-y-2">
           {navItems.map((item) => (
-            <li key={item.name}>
-              <Link 
-                href={item.path}
-                className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-300 transform hover:translate-x-1 ${
-                  isActive(item.path) 
-                    ? 'bg-blue-600 shadow-lg shadow-blue-600/20 text-white font-medium' 
-                    : 'text-gray-400 hover:text-white hover:bg-gray-800'
-                }`}
-              >
-                <item.icon size={18} className={`transition-transform duration-300 ${isActive(item.path) ? 'animate-pulse-soft' : 'group-hover:scale-110'}`} />
-                <span>{item.name}</span>
-                {isActive(item.path) && (
-                  <div className="ml-auto w-1.5 h-1.5 rounded-full bg-white"></div>
-                )}
-              </Link>
-            </li>
+            <Link 
+              key={item.name}
+              href={item.path}
+              className={`flex items-center space-x-3 px-4 py-3 rounded-xl transition-all duration-200 ${
+                isActive(item.path) 
+                  ? 'bg-white/20 text-white shadow-sm' 
+                  : 'text-white/90 hover:bg-white/10 hover:text-white'
+              }`}
+            >
+              <item.icon size={20} />
+              <span>{item.name}</span>
+            </Link>
           ))}
-        </ul>
+        </div>
       </nav>
-      
-      <div className="mt-auto mb-4">
-        <Link 
-          href="/logout"
-          className="flex items-center gap-3 px-3 py-2.5 text-gray-400 hover:text-white rounded-lg transition-all duration-300 hover:bg-red-500/20 hover:text-red-300 transform hover:translate-x-1"
-        >
-          <LogOut size={18} />
+
+      {/* User Section */}
+      <div className="p-4 mt-auto border-t border-white/10">
+        <div className="flex items-center space-x-3 px-4 py-3 rounded-xl hover:bg-white/10 transition-all duration-200">
+          <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center">
+            <span className="text-sm font-medium text-white">{username?.charAt(0) || "U"}</span>
+          </div>
+          <div className="flex-1">
+            <div className="text-sm font-medium text-white">{username}</div>
+            <div className="text-xs text-white/70">{username.toLowerCase().replace(' ', '.')}@example.com</div>
+          </div>
+        </div>
+        
+        <button className="w-full flex items-center space-x-3 px-4 py-3 mt-2 rounded-xl text-white/90 hover:bg-white/10 hover:text-white transition-all duration-200">
+          <LogOut size={20} />
           <span>Logout</span>
-        </Link>
+        </button>
       </div>
-      
-      <div className="flex items-center p-3 bg-gray-800 rounded-xl hover:bg-gray-700 transition-all duration-300 transform hover:translate-y-[-2px]">
-        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-violet-500 flex items-center justify-center text-white font-semibold">
-          {username?.charAt(0) || "U"}
-        </div>
-        <div className="ml-3 overflow-hidden">
-          <p className="text-sm font-medium truncate">{username}</p>
-          <p className="text-xs text-gray-400 truncate">{username.toLowerCase().replace(' ', '.')}@example.com</p>
-        </div>
-      </div>
-    </aside>
+    </div>
   );
 };
 
