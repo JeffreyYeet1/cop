@@ -6,9 +6,10 @@ import { Plus } from 'lucide-react';
 
 interface Task {
   title: string;
-  time: string;
+  description?: string;  // New optional description
+  priority: 'low' | 'medium' | 'high';  // New priority field
+  estimatedTime: string;  // Renamed from time
   tasks: { id: number; title: string; completed: boolean; }[];
-  tag?: string;  // Make tag optional
 }
 
 const DailyTasks = () => {
@@ -20,8 +21,9 @@ const DailyTasks = () => {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [showModal, setShowModal] = useState(false);
   const [newTaskTitle, setNewTaskTitle] = useState('');
+  const [newTaskDescription, setNewTaskDescription] = useState('');
+  const [newTaskPriority, setNewTaskPriority] = useState<'low' | 'medium' | 'high'>('low');
   const [newTaskTime, setNewTaskTime] = useState('');
-  const [newTaskTag, setNewTaskTag] = useState('');
 
   const handleAddTask = () => {
     setShowModal(true);
@@ -32,9 +34,10 @@ const DailyTasks = () => {
     
     const newTask = {
       title: newTaskTitle,
-      time: newTaskTime,
+      description: newTaskDescription || undefined,
+      priority: newTaskPriority,
+      estimatedTime: newTaskTime,
       tasks: [],
-      tag: newTaskTag || undefined
     };
 
     setTasks([...tasks, newTask]);
@@ -42,8 +45,9 @@ const DailyTasks = () => {
     
     // Reset form
     setNewTaskTitle('');
+    setNewTaskDescription('');
+    setNewTaskPriority('low');
     setNewTaskTime('');
-    setNewTaskTag('');
   };
 
   const handleDeleteTask = (index: number) => {
@@ -81,10 +85,11 @@ const DailyTasks = () => {
           <TaskCard
             key={index}
             title={task.title}
-            time={task.time}
+            description={task.description}
+            priority={task.priority}
+            estimatedTime={task.estimatedTime}
             tasks={task.tasks}
-            tag={task.tag}
-            onDelete={() => handleDeleteTask(index)}
+                onDelete={() => handleDeleteTask(index)}
             onTasksChange={(newTasks) => handleTasksChange(index, newTasks)}
           />
         ))}
@@ -101,7 +106,7 @@ const DailyTasks = () => {
                 <div className="space-y-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Task Title
+                      Task Title *
                     </label>
                     <input
                       type="text"
@@ -111,9 +116,38 @@ const DailyTasks = () => {
                       required
                     />
                   </div>
+                  
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Time
+                      Description (Optional)
+                    </label>
+                    <textarea
+                      value={newTaskDescription}
+                      onChange={(e) => setNewTaskDescription(e.target.value)}
+                      className="w-full border rounded-lg p-2"
+                      rows={3}
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Priority *
+                    </label>
+                    <select
+                      value={newTaskPriority}
+                      onChange={(e) => setNewTaskPriority(e.target.value as 'low' | 'medium' | 'high')}
+                      className="w-full border rounded-lg p-2"
+                      required
+                    >
+                      <option value="low">Low</option>
+                      <option value="medium">Medium</option>
+                      <option value="high">High</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Estimated Time
                     </label>
                     <input
                       type="text"
@@ -122,19 +156,7 @@ const DailyTasks = () => {
                       className="w-full border rounded-lg p-2"
                       placeholder="e.g. 0:30"
                     />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Tag
-                    </label>
-                    <input
-                      type="text"
-                      value={newTaskTag}
-                      onChange={(e) => setNewTaskTag(e.target.value)}
-                      className="w-full border rounded-lg p-2"
-                      placeholder="e.g. growth"
-                    />
-                  </div>
+                  </div>    
                 </div>
                 <div className="flex justify-end gap-2 mt-6">
                   <button

@@ -11,14 +11,23 @@ interface Task {
 
 interface CardProps {
   title: string;
-  time?: string;
+  description?: string;
+  priority: 'low' | 'medium' | 'high';
+  estimatedTime?: string;
   tasks: Task[];
-  tag?: string;
   onDelete?: () => void;
   onTasksChange?: (tasks: Task[]) => void;
 }
 
-const TaskCard = ({ title, time, tasks: initialTasks, tag, onDelete, onTasksChange }: CardProps) => {
+const TaskCard = ({ 
+  title, 
+  description, 
+  priority, 
+  estimatedTime: time, 
+  tasks: initialTasks, 
+  onDelete, 
+  onTasksChange 
+}: CardProps) => {
   const [tasks, setTasks] = useState<Task[]>(initialTasks);
   const [newSubtask, setNewSubtask] = useState('');
 
@@ -49,7 +58,10 @@ const TaskCard = ({ title, time, tasks: initialTasks, tag, onDelete, onTasksChan
     <div className="bg-white p-4 rounded-2xl shadow-md w-72 space-y-3 border relative">
       {/* Header */}
       <div className="flex justify-between items-center">
-        <h3 className="text-lg font-semibold">{title}</h3>
+        <div>
+          <h3 className="text-lg font-semibold">{title}</h3>
+          {description && <p className="text-sm text-gray-500">{description}</p>}
+        </div>
         <div className="flex items-center gap-2">
           {time && (
             <span className="bg-gray-100 text-gray-600 px-2 py-1 text-xs rounded flex items-center gap-1">
@@ -64,6 +76,14 @@ const TaskCard = ({ title, time, tasks: initialTasks, tag, onDelete, onTasksChan
             <X size={16} />
           </button>
         </div>
+      </div>
+
+      {/* Priority Badge */}
+      <div className={`text-xs px-2 py-1 rounded-full inline-block
+        ${priority === 'high' ? 'bg-red-100 text-red-700' : 
+          priority === 'medium' ? 'bg-yellow-100 text-yellow-700' : 
+          'bg-green-100 text-green-700'}`}>
+        {priority.charAt(0).toUpperCase() + priority.slice(1)} Priority
       </div>
 
       {/* Task List with Checkboxes */}
@@ -100,9 +120,6 @@ const TaskCard = ({ title, time, tasks: initialTasks, tag, onDelete, onTasksChan
           <Plus size={16} />
         </button>
       </form>
-
-      {/* Footer */}
-      {tag && <div className="text-blue-500 text-sm font-medium">#{tag}</div>}
     </div>
   );
 };
