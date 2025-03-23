@@ -109,7 +109,7 @@ const OnboardingScreen = () => {
       });
       
       // Make API call to save to database
-      const response = await fetch('http://localhost:8000/api/onboarding/preferences', {
+      const response = await fetch('/api/onboarding/preferences', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -121,13 +121,13 @@ const OnboardingScreen = () => {
       });
       
       if (!response.ok) {
-        const errorData = await response.json();
-        if (response.status === 401) {
-          // Unauthorized - redirect to login
-          router.push('/login');
-          return;
+        const contentType = response.headers.get('content-type');
+        if (contentType && contentType.includes('application/json')) {
+          const errorData = await response.json();
+          throw new Error(errorData.detail || 'Failed to save preferences');
+        } else {
+          throw new Error(`Server error: ${response.status} ${response.statusText}`);
         }
-        throw new Error(errorData.detail || 'Failed to save preferences');
       }
       
       console.log('Preferences saved successfully');
@@ -148,7 +148,7 @@ const OnboardingScreen = () => {
         return;
       }
 
-      const response = await fetch('http://localhost:8000/api/onboarding/preferences', {
+      const response = await fetch('/api/onboarding/preferences', {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -156,13 +156,13 @@ const OnboardingScreen = () => {
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
-        if (response.status === 401) {
-          // Unauthorized - redirect to login
-          router.push('/login');
-          return;
+        const contentType = response.headers.get('content-type');
+        if (contentType && contentType.includes('application/json')) {
+          const errorData = await response.json();
+          throw new Error(errorData.detail || 'Failed to load preferences');
+        } else {
+          throw new Error(`Server error: ${response.status} ${response.statusText}`);
         }
-        throw new Error(errorData.detail || 'Failed to load preferences');
       }
 
       const data = await response.json();

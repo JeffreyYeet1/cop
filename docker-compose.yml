@@ -24,9 +24,12 @@ services:
     volumes:
       - ./server:/server
       - server_python_cache:/root/.cache/pip
+    env_file:
+      - ./server/.env
     environment:
       - PYTHONUNBUFFERED=1
-    command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+      - PYTHONPATH=/server
+    command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload --log-level debug
 
 volumes:
   server_python_cache:

@@ -29,4 +29,10 @@ class TaskRecommendation(BaseModel):
 
 class PekaResponse(BaseModel):
     sorted_tasks: List[int]
-    top_recommendation: TaskRecommendation 
+    top_recommendation: TaskRecommendation
+    explanation: str
+
+class GeneralResponse(BaseModel):
+    response: str
+    action_items: List[str]
+    timestamp: datetime = datetime.now() 

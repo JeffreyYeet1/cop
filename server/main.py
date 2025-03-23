@@ -1,37 +1,52 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-
 from api.routes import auth, users, onboarding, todo, peka
+import logging
+from dotenv import load_dotenv
+import os
 
-app = FastAPI()
+# Configure logging
+logging.basicConfig(
+    level=logging.DEBUG,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger(__name__)
 
-# Add CORS middleware
+# Load environment variables
+load_dotenv()
+
+# Debug logging for environment variables
+logger.info("Loading environment variables...")
+cohere_key = os.getenv("COHERE_API_KEY")
+logger.info(f"Cohere API key loaded: {'Found' if cohere_key else 'Not found'}")
+
+app = FastAPI(title="Peka API")
+
+# Configure CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],  # Your frontend URL
-    allow_credentials=True,  # Allow credentials
-    allow_methods=["*"],  # Allows all methods
-    allow_headers=["*", "Authorization"],  # Explicitly allow Authorization header
-    expose_headers=["*"],  # Exposes all headers
-    max_age=3600,  # Cache preflight requests for 1 hour
+    allow_origins=["*"],  # In production, replace with specific origins
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 # Add request logging middleware
 @app.middleware("http")
 async def log_requests(request, call_next):
-    print(f"\n=== New Request ===")
-    print(f"Method: {request.method}")
-    print(f"URL: {request.url}")
-    print(f"Headers: {dict(request.headers)}")
+    logger.info("=== New Request ===")
+    logger.debug(f"Method: {request.method}")
+    logger.debug(f"URL: {request.url}")
+    logger.debug(f"Headers: {dict(request.headers)}")
+    
     try:
         response = await call_next(request)
-        print(f"Response status: {response.status_code}")
+        logger.info(f"Response status: {response.status_code}")
         return response
     except Exception as e:
-        print(f"Error processing request: {str(e)}")
-        print(f"Error type: {type(e)}")
-        import traceback
-        print(f"Traceback: {traceback.format_exc()}")
+        logger.error(f"Error processing request: {str(e)}")
+        logger.error(f"Error type: {type(e)}")
+        logger.exception("Full traceback:")
         raise
 
 # Include routers
@@ -43,4 +58,5 @@ app.include_router(peka.router, prefix="/api/peka", tags=["peka"])
 
 @app.get("/")
 async def root():
-    return {"message": "Welcome to COP API"} 
+    logger.info("Root endpoint accessed")
+    return {"message": "Welcome to Peka API"} 
