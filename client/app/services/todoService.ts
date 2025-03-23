@@ -1,4 +1,4 @@
-import { Todo } from '../types/todo';
+import { Task } from '../types';
 
 const API_BASE_URL = 'http://localhost:8000/api';
 
@@ -15,7 +15,7 @@ const getAuthHeader = () => {
 
 export const todoService = {
   // Get all todos
-  getAllTodos: async (): Promise<Todo[]> => {
+  getAllTodos: async (): Promise<Task[]> => {
     try {
       const response = await fetch(`${API_BASE_URL}/todo`, {
         headers: getAuthHeader()
@@ -34,7 +34,7 @@ export const todoService = {
   },
 
   // Get a single todo
-  getTodo: async (id: number): Promise<Todo> => {
+  getTodo: async (id: number): Promise<Task> => {
     try {
       const response = await fetch(`${API_BASE_URL}/todo/${id}`, {
         headers: getAuthHeader()
@@ -53,7 +53,7 @@ export const todoService = {
   },
 
   // Create a new todo
-  createTodo: async (todo: Omit<Todo, 'id' | 'user_id' | 'created_at'>): Promise<Todo> => {
+  createTodo: async (todo: Omit<Task, 'id' | 'user_id' | 'created_at'>): Promise<Task> => {
     try {
       const response = await fetch(`${API_BASE_URL}/todo`, {
         method: 'POST',
@@ -74,7 +74,7 @@ export const todoService = {
   },
 
   // Update a todo
-  updateTodo: async (id: number, todo: Omit<Todo, 'id' | 'user_id' | 'created_at'>): Promise<Todo> => {
+  updateTodo: async (id: number, todo: Partial<Task>): Promise<Task> => {
     try {
       const response = await fetch(`${API_BASE_URL}/todo/${id}`, {
         method: 'PUT',

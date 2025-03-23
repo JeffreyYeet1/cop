@@ -83,4 +83,26 @@ async def get_onboarding_preferences(
         raise HTTPException(
             status_code=500,
             detail=f"Failed to get preferences: {str(e)}"
+        )
+
+@router.get("/")
+async def get_onboarding_status(
+    current_user: Annotated[User, Depends(get_current_active_user)]
+):
+    try:
+        # Get the numeric user ID
+        user_id = await get_user_id_by_email(current_user.email)
+        
+        # Check if user has completed onboarding
+        result = supabase.from_("user_preferences").select("*").eq("user_id", user_id).execute()
+        
+        return {
+            "completed": len(result.data) > 0,
+            "has_preferences": len(result.data) > 0 and len(result.data[0].get("preferences", [])) > 0
+        }
+    except Exception as e:
+        print(f"Error checking onboarding status: {str(e)}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to check onboarding status: {str(e)}"
         ) 

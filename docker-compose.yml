@@ -5,19 +5,15 @@ services:
     build:
       context: ./client
       dockerfile: Dockerfile
-      target: dev  # Specify the development stage
+      target: dev
     ports:
       - "3000:3000"
-    environment:
-      - NODE_ENV=${NODE_ENV:-development}
     volumes:
       - ./client:/app
-      - client_node_modules:/app/node_modules
-      - client_next_cache:/app/.next
-    env_file:
-      - ./client/.env
-    depends_on:
-      - server
+      - /app/node_modules
+    environment:
+      - NODE_ENV=development
+    command: npm run dev
 
   server:
     build:
@@ -25,13 +21,27 @@ services:
       dockerfile: Dockerfile
     ports:
       - "8000:8000"
-    environment:
-      - NODE_ENV=${NODE_ENV:-development}
     volumes:
       - ./server:/server
+      - server_python_cache:/root/.cache/pip
     env_file:
       - ./server/.env
+    environment:
+      - PYTHONUNBUFFERED=1
+      - PYTHONPATH=/server
+    command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload --log-level debug
 
 volumes:
-  client_node_modules:
-  client_next_cache:
+  server_python_cache:
+
+  # server:
+  #   build:
+  #     context: ./server
+  #     dockerfile: Dockerfile
+  #   ports:
+  #     - "8000:8000"
+  #   environment:
+  #     - NODE_ENV=production
+  #   volumes:
+  #     - ./server:/app
+  #     - /app/node_modules 
