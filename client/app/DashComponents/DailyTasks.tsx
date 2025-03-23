@@ -57,7 +57,7 @@ const DailyTasks = () => {
   };
 
   return (
-    <div className="w-full max-w-2xl mx-auto p-6">
+    <div className="w-full pl-8 p-10">
       {/* Header */}
       <div className="mb-8">
         <h1 className="text-4xl font-bold text-gray-900">{dayName}</h1>
