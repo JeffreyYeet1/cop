@@ -1,8 +1,8 @@
 "use client";
 import React from "react";
-import DailyTasks from "../dashcomponents/DailyTasks";
-import Sidebar from "../dashcomponents/Sidebar";
-import Calendar from "../dashcomponents/Calendar";
+import DailyTasks from "../DashComponents/DailyTasks";
+import Sidebar from "../DashComponents/Sidebar";
+import Calendar from "../DashComponents/Calendar";
 
 export default function DashboardPage() {
   return (
