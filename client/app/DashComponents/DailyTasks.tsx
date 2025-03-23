@@ -81,15 +81,18 @@ const DailyTasks = () => {
   }
 
   return (
-    <div className="w-full max-w-2xl mx-auto p-6">
-      <div className="flex items-center gap-4 mb-6">
-        <div className="flex-1">
-          <h2 className="text-2xl font-bold">{dayName}</h2>
-          <p className="text-gray-600">{monthDay}</p>
-        </div>
-        <button
-          onClick={() => setShowNewTaskModal(true)}
-          className="bg-blue-500 text-white px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-blue-600 transition-colors"
+    <div className="w-full pl-8 p-10">
+      {/* Header */}
+      <div className="mb-8">
+        <h1 className="text-4xl font-bold text-gray-900">{dayName}</h1>
+        <p className="text-xl text-gray-500">{monthDay}</p>
+      </div>
+
+      {/* Add Task Button */}
+      <div className="mb-6">
+        <button 
+          onClick={handleAddTask}
+          className="w-72 bg-white p-4 rounded-2xl shadow-md border flex items-center gap-2 text-gray-500 hover:bg-gray-50 transition-colors"
         >
           <Plus size={20} />
           New Task

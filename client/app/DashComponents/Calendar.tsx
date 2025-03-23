@@ -64,7 +64,7 @@ const TimeSlot = ({
 };
 
 const Calendar = () => {
-    const date = new Date();
+  const date = new Date();
   const dayName = date.toLocaleString('en-US', { weekday: 'long' });
   const monthDay = date.toLocaleString('en-US', { month: 'long', day: 'numeric' });
   const [events, setEvents] = useState<Event[]>([
@@ -89,7 +89,7 @@ const Calendar = () => {
   });
 
   return (
-    <div className="w-96 bg-white border-l h-screen overflow-y-auto">
+    <div className="h-full w-full p-6 pr-0 pt-0">
       {/* Calendar Header */}
       <div className="p-4 border-b sticky top-0 bg-white z-10">
         <button className="flex items-center gap-2 px-3 py-1.5 rounded-lg border text-sm text-gray-600">
