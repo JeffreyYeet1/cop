@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from api.routes import auth, users, onboarding, todo
+from api.routes import auth, users, onboarding, todo, peka
 
 app = FastAPI()
 
@@ -39,7 +39,8 @@ app.include_router(auth.router, prefix="/api/auth", tags=["auth"])
 app.include_router(users.router, prefix="/api/users", tags=["users"])
 app.include_router(onboarding.router, prefix="/api/onboarding", tags=["onboarding"])
 app.include_router(todo.router, prefix="/api/todo", tags=["todo"])
+app.include_router(peka.router, prefix="/api/peka", tags=["peka"])
 
 @app.get("/")
 async def root():
-    return {"message": "LangChain"} 
+    return {"message": "Welcome to COP API"} 

@@ -14,7 +14,7 @@ const DailyTasks = () => {
   const [newTask, setNewTask] = useState({
     title: '',
     description: '',
-    priority: 'low' as const,
+    priority: 'low' as 'low' | 'medium' | 'high',
     estimated_duration: 30
   });
 

@@ -25,14 +25,18 @@ services:
       - "8000:8000"
     environment:
       - NODE_ENV=${NODE_ENV:-development}
+      - PYTHONUNBUFFERED=1  # This ensures Python output is sent straight to terminal
     volumes:
       - ./server:/server
+      - server_python_cache:/root/.cache/pip  # Cache pip packages
     env_file:
       - ./server/.env
+    command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload --reload-dir /server
 
 volumes:
   client_node_modules:
   client_next_cache:
+  server_python_cache:
 
   # server:
   #   build:

@@ -5,4 +5,7 @@ passlib[bcrypt]==1.7.4
 python-multipart==0.0.9
 python-dotenv==1.0.1
 supabase==1.2.0
-PyJWT==2.8.0 
+PyJWT==2.8.0
+langchain==0.1.12
+cohere==4.52
+pydantic==2.5.3 
