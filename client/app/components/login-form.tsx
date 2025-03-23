@@ -6,6 +6,7 @@ import { Button } from "./ui2/button";
 import { Input } from "./ui2/input";
 import { Card, CardContent, CardFooter } from "./ui2/card";
 import { useRouter } from "next/navigation";
+import { GoogleButton } from "./ui2/google-button";
 
 export function LoginForm() {
   const router = useRouter();
@@ -136,6 +137,15 @@ export function LoginForm() {
   return (
     <Card>
       <CardContent className="pt-6">
+        <GoogleButton mode="login" className="mb-6" />
+        <div className="relative mb-6">
+          <div className="absolute inset-0 flex items-center">
+            <div className="w-full border-t border-gray-300" />
+          </div>
+          <div className="relative flex justify-center text-sm">
+            <span className="bg-white px-2 text-gray-500">or continue with email</span>
+          </div>
+        </div>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
             <label htmlFor="email" className="text-sm font-medium">
