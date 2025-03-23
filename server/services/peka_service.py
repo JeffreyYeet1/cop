@@ -90,6 +90,9 @@ IMPORTANT: You must classify the intent as one of these three:
    - Get insights about their productivity
    - See task statistics
    - Get recommendations
+   - Need help prioritizing tasks
+   - Ask what tasks they should do
+   - Get task management advice
 
 3. "general" - for ANY other type of query or question
 
@@ -101,11 +104,14 @@ For "create" intent:
 - "Add a reminder to call mom on her birthday"
 
 For "analyze" intent:
+- "What tasks should I do?"
+- "I'm lost, I need help prioritizing my tasks"
 - "How am I doing with my tasks?"
 - "What should I focus on today?"
 - "Check my progress"
 - "Show me my task statistics"
 - "What's my productivity like?"
+- "Help me organize my tasks"
 
 For "general" intent:
 - "Need Help Being Able To Focus On Studying"
@@ -145,12 +151,12 @@ For "Create a task for submitting my final report by tomorrow afternoon":
     "action_items": ["Start working on the report now", "Review the requirements", "Set aside dedicated time tomorrow morning"]
 }}
 
-For "How am I doing with my tasks?":
+For "What tasks should I do?":
 {{
     "intent": "analyze",
     "task_details": null,
-    "message": "Let me analyze your task progress and provide some insights.",
-    "action_items": ["Review your completed tasks", "Check task priorities", "Update task statuses"]
+    "message": "Let me analyze your tasks and provide personalized recommendations.",
+    "action_items": ["Review your task list", "Check task priorities", "Update task statuses"]
 }}
 
 For "how to be more productive":
@@ -200,6 +206,24 @@ IMPORTANT: Your response must be a complete, valid JSON object. Do not include a
             
             # Add timestamp
             response_data['timestamp'] = datetime.utcnow().isoformat()
+            
+            # If the intent is "analyze", we need to make a call to the analyze endpoint
+            if response_data.get('intent') == 'analyze':
+                try:
+                    # Get the current user's tasks
+                    tasks = await self.get_user_tasks()  # You'll need to implement this method
+                    if tasks:
+                        # Call the analyze endpoint
+                        analyze_response = await self.analyze_tasks(tasks)
+                        # Merge the analyze response with our current response
+                        response_data.update({
+                            'message': analyze_response.explanation,
+                            'action_items': analyze_response.top_recommendation.reason.split('. ') if analyze_response.top_recommendation else []
+                        })
+                except Exception as e:
+                    logger.error(f"Failed to analyze tasks: {str(e)}")
+                    # If analysis fails, keep the original response but add a note
+                    response_data['message'] = "I tried to analyze your tasks but encountered an error. " + response_data['message']
             
             # Validate task details if present
             if response_data.get('task_details'):
