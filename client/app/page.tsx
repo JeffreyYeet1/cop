@@ -37,7 +37,7 @@ export default function HomePage() {
           <Link href="/login" className="text-blue-600 hover:text-blue-800 font-medium">
             Sign In
           </Link>
-          <Link href="/register" className="text-blue-600 hover:text-blue-800 font-medium">
+          <Link href="/signup" className="text-blue-600 hover:text-blue-800 font-medium">
             Create Account
           </Link>
         </div>
