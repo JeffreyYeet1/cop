@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Clock } from "lucide-react";
+import { Clock, X, Plus } from "lucide-react";
 
 interface Task {
   id: number;
@@ -14,25 +14,56 @@ interface CardProps {
   time?: string;
   tasks: Task[];
   tag?: string;
+  onDelete?: () => void;
+  onTasksChange?: (tasks: Task[]) => void;
 }
 
-const TaskCard = ({ title, time, tasks: initialTasks, tag }: CardProps) => {
+const TaskCard = ({ title, time, tasks: initialTasks, tag, onDelete, onTasksChange }: CardProps) => {
   const [tasks, setTasks] = useState<Task[]>(initialTasks);
+  const [newSubtask, setNewSubtask] = useState('');
 
   const toggleTask = (id: number) => {
-    setTasks(tasks.map(task => task.id === id ? { ...task, completed: !task.completed } : task));
+    const newTasks = tasks.map(task => 
+      task.id === id ? { ...task, completed: !task.completed } : task
+    );
+    setTasks(newTasks);
+    onTasksChange?.(newTasks);
+  };
+
+  const handleAddSubtask = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (newSubtask.trim()) {
+      const newTask: Task = {
+        id: Date.now(),
+        title: newSubtask.trim(),
+        completed: false
+      };
+      const newTasks = [...tasks, newTask];
+      setTasks(newTasks);
+      onTasksChange?.(newTasks);
+      setNewSubtask('');
+    }
   };
 
   return (
-    <div className="bg-white p-4 rounded-2xl shadow-md w-72 space-y-3 border">
+    <div className="bg-white p-4 rounded-2xl shadow-md w-72 space-y-3 border relative">
       {/* Header */}
       <div className="flex justify-between items-center">
         <h3 className="text-lg font-semibold">{title}</h3>
-        {time && (
-          <span className="bg-gray-100 text-gray-600 px-2 py-1 text-xs rounded flex items-center gap-1">
-            <Clock size={12} /> {time}
-          </span>
-        )}
+        <div className="flex items-center gap-2">
+          {time && (
+            <span className="bg-gray-100 text-gray-600 px-2 py-1 text-xs rounded flex items-center gap-1">
+              <Clock size={12} /> {time}
+            </span>
+          )}
+          <button 
+            onClick={onDelete}
+            className="text-gray-400 hover:text-red-500 transition-colors"
+            aria-label="Delete task"
+          >
+            <X size={16} />
+          </button>
+        </div>
       </div>
 
       {/* Task List with Checkboxes */}
@@ -51,6 +82,24 @@ const TaskCard = ({ title, time, tasks: initialTasks, tag }: CardProps) => {
           </li>
         ))}
       </ul>
+
+      {/* Add Subtask Form */}
+      <form onSubmit={handleAddSubtask} className="flex gap-2">
+        <input
+          type="text"
+          value={newSubtask}
+          onChange={(e) => setNewSubtask(e.target.value)}
+          placeholder="Add a subtask..."
+          className="flex-1 text-sm border rounded-lg px-2 py-1 focus:outline-none focus:ring-1 focus:ring-blue-500"
+        />
+        <button
+          type="submit"
+          className="text-blue-500 hover:text-blue-600"
+          disabled={!newSubtask.trim()}
+        >
+          <Plus size={16} />
+        </button>
+      </form>
 
       {/* Footer */}
       {tag && <div className="text-blue-500 text-sm font-medium">#{tag}</div>}

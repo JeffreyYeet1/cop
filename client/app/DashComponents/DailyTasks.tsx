@@ -1,49 +1,60 @@
 "use client";
 
-import React from 'react';
+import React, { useState } from 'react';
 import TaskCard from './TaskCard';
 import { Plus } from 'lucide-react';
+
+interface Task {
+  title: string;
+  time: string;
+  tasks: { id: number; title: string; completed: boolean; }[];
+  tag?: string;  // Make tag optional
+}
 
 const DailyTasks = () => {
   const date = new Date();
   const dayName = date.toLocaleString('en-US', { weekday: 'long' });
   const monthDay = date.toLocaleString('en-US', { month: 'long', day: 'numeric' });
 
-  const tasks = [
-    {
-      title: "Answer customer support tickets",
-      time: "0:30",
-      tasks: [{ id: 1, title: "Answer customer support tickets", completed: false }],
-      tag: "growth"
-    },
-    {
-      title: "Document customer feedback",
-      time: "1:30",
-      tasks: [
-        { id: 1, title: "Summarize customer churn surveys", completed: true },
-        { id: 2, title: "Review top posts in Canny", completed: true }
-      ],
-      tag: "product"
-    },
-    {
-      title: "Investigate secondary growth channels",
-      time: "0:30",
-      tasks: [{ id: 1, title: "Investigate secondary growth channels", completed: false }],
-      tag: "growth"
-    },
-    {
-      title: "Review prototype of new feature",
-      time: "2:00",
-      tasks: [{ id: 1, title: "Review prototype of new feature", completed: false }],
-      tag: "product"
-    },
-    {
-      title: "1:1 with Tomoa",
-      time: "0:30",
-      tasks: [{ id: 1, title: "1:1 with Tomoa", completed: false }],
-      tag: "growth"
-    }
-  ];
+  // Convert tasks to state
+  const [tasks, setTasks] = useState<Task[]>([]);
+  const [showModal, setShowModal] = useState(false);
+  const [newTaskTitle, setNewTaskTitle] = useState('');
+  const [newTaskTime, setNewTaskTime] = useState('');
+  const [newTaskTag, setNewTaskTag] = useState('');
+
+  const handleAddTask = () => {
+    setShowModal(true);
+  };
+
+  const handleSubmitTask = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    const newTask = {
+      title: newTaskTitle,
+      time: newTaskTime,
+      tasks: [],
+      tag: newTaskTag || undefined
+    };
+
+    setTasks([...tasks, newTask]);
+    setShowModal(false);
+    
+    // Reset form
+    setNewTaskTitle('');
+    setNewTaskTime('');
+    setNewTaskTag('');
+  };
+
+  const handleDeleteTask = (index: number) => {
+    setTasks(tasks.filter((_, i) => i !== index));
+  };
+
+  const handleTasksChange = (index: number, newSubtasks: { id: number; title: string; completed: boolean; }[]) => {
+    setTasks(tasks.map((task, i) => 
+      i === index ? { ...task, tasks: newSubtasks } : task
+    ));
+  };
 
   return (
     <div className="w-full max-w-2xl mx-auto p-6">
@@ -55,10 +66,12 @@ const DailyTasks = () => {
 
       {/* Add Task Button */}
       <div className="mb-6">
-        <button className="w-72 bg-white p-4 rounded-2xl shadow-md border flex items-center gap-2 text-gray-500 hover:bg-gray-50 transition-colors">
+        <button 
+          onClick={handleAddTask}
+          className="w-72 bg-white p-4 rounded-2xl shadow-md border flex items-center gap-2 text-gray-500 hover:bg-gray-50 transition-colors"
+        >
           <Plus size={20} className="text-gray-400" />
           <span className="text-gray-600">Add task</span>
-          <span className="ml-auto bg-gray-100 px-2 py-1 rounded text-sm">7:00</span>
         </button>
       </div>
 
@@ -71,9 +84,78 @@ const DailyTasks = () => {
             time={task.time}
             tasks={task.tasks}
             tag={task.tag}
+            onDelete={() => handleDeleteTask(index)}
+            onTasksChange={(newTasks) => handleTasksChange(index, newTasks)}
           />
         ))}
       </div>
+
+      {/* Add Task Modal */}
+      {showModal && (
+        <div className="fixed inset-0 z-50 isolate">
+          <div className="fixed inset-0 bg-black bg-opacity-50" onClick={() => setShowModal(false)} />
+          <div className="fixed inset-0 flex items-center justify-center pointer-events-none">
+            <div className="bg-white rounded-2xl p-6 w-96 pointer-events-auto">
+              <h2 className="text-xl font-semibold mb-4">Add New Task</h2>
+              <form onSubmit={handleSubmitTask}>
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Task Title
+                    </label>
+                    <input
+                      type="text"
+                      value={newTaskTitle}
+                      onChange={(e) => setNewTaskTitle(e.target.value)}
+                      className="w-full border rounded-lg p-2"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Time
+                    </label>
+                    <input
+                      type="text"
+                      value={newTaskTime}
+                      onChange={(e) => setNewTaskTime(e.target.value)}
+                      className="w-full border rounded-lg p-2"
+                      placeholder="e.g. 0:30"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Tag
+                    </label>
+                    <input
+                      type="text"
+                      value={newTaskTag}
+                      onChange={(e) => setNewTaskTag(e.target.value)}
+                      className="w-full border rounded-lg p-2"
+                      placeholder="e.g. growth"
+                    />
+                  </div>
+                </div>
+                <div className="flex justify-end gap-2 mt-6">
+                  <button
+                    type="button"
+                    onClick={() => setShowModal(false)}
+                    className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
+                  >
+                    Add Task
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
