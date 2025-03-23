@@ -134,7 +134,7 @@ export function LoginForm() {
   };
 
   return (
-    <Card>
+    <Card className="shadow-lg">
       <CardContent className="pt-6">
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
@@ -180,13 +180,14 @@ export function LoginForm() {
           </div>
         </form>
       </CardContent>
-      <CardFooter className="flex justify-center border-t p-4">
+      <CardFooter className="flex flex-col justify-center border-t p-4">
         <p className="text-sm text-muted-foreground">
           Don't have an account?{" "}
           <Link href="/signup" className="text-primary hover:underline">
             Sign up
           </Link>
         </p>
+        <p className="text-xs text-gray-400 mt-2">© {new Date().getFullYear()} Clash of Plans</p>
       </CardFooter>
     </Card>
   );
