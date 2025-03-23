@@ -64,7 +64,7 @@ const TimeSlot = ({
 };
 
 const Calendar = () => {
-    const date = new Date();
+  const date = new Date();
   const dayName = date.toLocaleString('en-US', { weekday: 'long' });
   const monthDay = date.toLocaleString('en-US', { month: 'long', day: 'numeric' });
   const [events, setEvents] = useState<Event[]>([
