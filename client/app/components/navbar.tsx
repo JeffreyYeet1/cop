@@ -3,6 +3,8 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import LogoImage from "../../assets/logo.png";
+
 import { Button } from "./ui/button";
 import {
   Sheet,
@@ -62,8 +64,13 @@ const NavBar = () => {
         <div className="flex items-center gap-8">
           {/* Logo */}
           <Link href="/" className="flex items-center space-x-2 transition-transform duration-200 hover:scale-105">
-            <div className="bg-primary rounded-md p-1 flex items-center justify-center h-8 w-8">
-              <span className="text-primary-foreground font-bold">AX</span>
+            <div className="h-8 w-8 relative">
+              <Image 
+                src={LogoImage} 
+                alt="Clash of Plans Logo" 
+                fill 
+                className="object-contain"
+              />
             </div>
             <span className="font-bold text-xl tracking-tight">Clash of Plans</span>
           </Link>
