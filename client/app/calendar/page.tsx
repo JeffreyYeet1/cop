@@ -57,7 +57,12 @@ export default function CalendarTest() {
 
       const data = await response.json();
       console.log('Calendars:', data);
-      setCalendars(data.items || []);
+      // Find and set only the primary calendar
+      const primaryCalendar = data.items?.find((cal: Calendar) => cal.primary) || null;
+      if (primaryCalendar) {
+        setCalendars([primaryCalendar]);
+        setSelectedCalendar(primaryCalendar.id);
+      }
     } catch (err) {
       console.error('Error fetching calendars:', err);
       setError(err instanceof Error ? err.message : 'Failed to fetch calendars');
@@ -215,30 +220,13 @@ export default function CalendarTest() {
 
   return (
     <div className="p-8">
-      <h1 className="text-2xl font-bold mb-6">Calendar Test Page</h1>
+      <h1 className="text-2xl font-bold mb-6">Calendar Events</h1>
       
       {error && (
         <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
           {error}
         </div>
       )}
-
-      {/* Calendars Section */}
-      <div className="mb-8">
-        <h2 className="text-xl font-semibold mb-4">Your Calendars</h2>
-        <select 
-          value={selectedCalendar}
-          onChange={(e) => setSelectedCalendar(e.target.value)}
-          className="border rounded p-2 mb-4"
-        >
-          <option value="primary">Primary Calendar</option>
-          {calendars.map(calendar => (
-            <option key={calendar.id} value={calendar.id}>
-              {calendar.summary}
-            </option>
-          ))}
-        </select>
-      </div>
 
       {/* Create Event Button */}
       <button

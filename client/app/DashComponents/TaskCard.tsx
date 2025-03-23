@@ -95,12 +95,26 @@ const TaskCard: React.FC<TaskCardProps> = ({
     }
   };
 
+  const handleDragStart = (e: React.DragEvent<HTMLDivElement>) => {
+    const taskData = {
+      id,
+      title,
+      description,
+      estimated_duration: time ? parseInt(time.replace('min', '')) : 60,
+      priority
+    };
+    e.dataTransfer.setData('application/json+task', JSON.stringify(taskData));
+    e.dataTransfer.setData('text/plain', id.toString());
+    e.currentTarget.classList.add('opacity-70', 'scale-105', 'rotate-1');
+    onDragStart?.(e, id);
+  };
+
   return (
     <div
       ref={cardRef}
       className={`relative border p-4 rounded-xl animate-fadeIn shadow-sm ${priorityColors.bg} ${priorityColors.border} ${priorityColors.hover} hover:-translate-y-1 transition-all duration-300 group`}
       draggable={onDragStart !== undefined}
-      onDragStart={(e) => onDragStart && onDragStart(e, id)}
+      onDragStart={handleDragStart}
       onDragOver={(e) => onDragOver && onDragOver(e)}
       onDrop={(e) => onDrop && onDrop(e, id)}
       style={{

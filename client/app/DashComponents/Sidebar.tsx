@@ -3,11 +3,12 @@ import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Home, Focus, Calendar, Settings, LogOut, Sparkles, User2 } from 'lucide-react';
+import { useRouter } from "next/navigation";
 
 const Sidebar = () => {
   const pathname = usePathname();
   const [username, setUsername] = useState("User");
-
+  const router = useRouter();
   // Simulate getting username
   useEffect(() => {
     // In a real app, this would fetch from an API or auth system
@@ -29,6 +30,8 @@ const Sidebar = () => {
 
   const handleLogout = () => {
     // Implement logout functionality
+    localStorage.removeItem('token');
+    router.push('/login');
     console.log("Logging out");
   };
 
