@@ -1,125 +1,149 @@
 "use client";
 
 import { useState } from "react";
-import { Clock, X, Plus } from "lucide-react";
+import { Clock, Trash2, Pencil } from "lucide-react";
+import { todoService } from '../services/todoService';
+import { Todo } from '../types/todo';
 
-interface Task {
+interface TaskCardProps {
   id: number;
   title: string;
-  completed: boolean;
-}
-
-interface CardProps {
-  title: string;
-  description?: string;
+  description: string;
+  time: string;
   priority: 'low' | 'medium' | 'high';
-  estimatedTime?: string;
-  tasks: Task[];
-  onDelete?: () => void;
-  onTasksChange?: (tasks: Task[]) => void;
+  onDelete: () => void;
+  onUpdate: (todo: Todo) => void;
 }
 
-const TaskCard = ({ 
-  title, 
-  description, 
-  priority, 
-  estimatedTime: time, 
-  tasks: initialTasks, 
-  onDelete, 
-  onTasksChange 
-}: CardProps) => {
-  const [tasks, setTasks] = useState<Task[]>(initialTasks);
-  const [newSubtask, setNewSubtask] = useState('');
+const getPriorityColor = (priority: string) => {
+  switch (priority) {
+    case 'low':
+      return 'bg-green-100 text-green-800';
+    case 'medium':
+      return 'bg-yellow-100 text-yellow-800';
+    case 'high':
+      return 'bg-red-100 text-red-800';
+    default:
+      return 'bg-gray-100 text-gray-800';
+  }
+};
 
-  const toggleTask = (id: number) => {
-    const newTasks = tasks.map(task => 
-      task.id === id ? { ...task, completed: !task.completed } : task
-    );
-    setTasks(newTasks);
-    onTasksChange?.(newTasks);
+const TaskCard = ({ id, title, description, time, priority, onDelete, onUpdate }: TaskCardProps) => {
+  const [isCompleted, setIsCompleted] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editedTask, setEditedTask] = useState({ title, description, priority });
+
+  const handleToggleComplete = async () => {
+    try {
+      setIsCompleted(!isCompleted);
+      await todoService.updateTodo(id, {
+        title,
+        description,
+        priority,
+        estimated_duration: parseInt(time.replace('min', ''))
+      });
+    } catch (err) {
+      console.error('Error updating todo:', err);
+    }
   };
 
-  const handleAddSubtask = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (newSubtask.trim()) {
-      const newTask: Task = {
-        id: Date.now(),
-        title: newSubtask.trim(),
-        completed: false
-      };
-      const newTasks = [...tasks, newTask];
-      setTasks(newTasks);
-      onTasksChange?.(newTasks);
-      setNewSubtask('');
+  const handleUpdate = async () => {
+    try {
+      await todoService.updateTodo(id, {
+        title: editedTask.title,
+        description: editedTask.description,
+        priority: editedTask.priority,
+        estimated_duration: parseInt(time.replace('min', ''))
+      });
+      onUpdate({ id, title: editedTask.title, description: editedTask.description, priority: editedTask.priority, estimated_duration: parseInt(time.replace('min', '')), user_id: 0, created_at: '' });
+      setIsEditing(false);
+    } catch (err) {
+      console.error('Error updating todo:', err);
     }
   };
 
   return (
-    <div className="bg-white p-4 rounded-2xl shadow-md w-72 space-y-3 border relative">
-      {/* Header */}
-      <div className="flex justify-between items-center">
-        <div>
-          <h3 className="text-lg font-semibold">{title}</h3>
-          {description && <p className="text-sm text-gray-500">{description}</p>}
-        </div>
-        <div className="flex items-center gap-2">
-          {time && (
-            <span className="bg-gray-100 text-gray-600 px-2 py-1 text-xs rounded flex items-center gap-1">
-              <Clock size={12} /> {time}
-            </span>
-          )}
-          <button 
-            onClick={onDelete}
-            className="text-gray-400 hover:text-red-500 transition-colors"
-            aria-label="Delete task"
-          >
-            <X size={16} />
-          </button>
-        </div>
-      </div>
-
-      {/* Priority Badge */}
-      <div className={`text-xs px-2 py-1 rounded-full inline-block
-        ${priority === 'high' ? 'bg-red-100 text-red-700' : 
-          priority === 'medium' ? 'bg-yellow-100 text-yellow-700' : 
-          'bg-green-100 text-green-700'}`}>
-        {priority.charAt(0).toUpperCase() + priority.slice(1)} Priority
-      </div>
-
-      {/* Task List with Checkboxes */}
-      <ul className="space-y-2">
-        {tasks.map(task => (
-          <li key={task.id} className="flex items-center gap-2">
-            <input 
-              type="checkbox" 
-              checked={task.completed} 
-              onChange={() => toggleTask(task.id)}
-              className="w-4 h-4 accent-gray-500 cursor-pointer"
-            />
-            <span className={task.completed ? "line-through text-gray-400" : "text-gray-700"}>
-              {task.title}
-            </span>
-          </li>
-        ))}
-      </ul>
-
-      {/* Add Subtask Form */}
-      <form onSubmit={handleAddSubtask} className="flex gap-2">
+    <div className={`bg-white p-4 rounded-2xl shadow-md w-full border transition-all duration-200 ${isCompleted ? 'opacity-75' : ''}`}>
+      <div className="flex items-start gap-4">
         <input
-          type="text"
-          value={newSubtask}
-          onChange={(e) => setNewSubtask(e.target.value)}
-          placeholder="Add a subtask..."
-          className="flex-1 text-sm border rounded-lg px-2 py-1 focus:outline-none focus:ring-1 focus:ring-blue-500"
+          type="checkbox"
+          checked={isCompleted}
+          onChange={handleToggleComplete}
+          className="mt-1 w-5 h-5 accent-blue-500 cursor-pointer"
         />
-        <button
-          type="submit"
-          className="text-blue-500 hover:text-blue-600"
-          disabled={!newSubtask.trim()}
-        >
-          <Plus size={16} />
-        </button>
-      </form>
+        <div className="flex-1">
+          {isEditing ? (
+            <div className="space-y-2">
+              <input
+                type="text"
+                value={editedTask.title}
+                onChange={(e) => setEditedTask({ ...editedTask, title: e.target.value })}
+                className="w-full px-2 py-1 border rounded"
+              />
+              <textarea
+                value={editedTask.description}
+                onChange={(e) => setEditedTask({ ...editedTask, description: e.target.value })}
+                className="w-full px-2 py-1 border rounded"
+                rows={2}
+              />
+              <select
+                value={editedTask.priority}
+                onChange={(e) => setEditedTask({ ...editedTask, priority: e.target.value as 'low' | 'medium' | 'high' })}
+                className="px-2 py-1 border rounded"
+              >
+                <option value="low">Low</option>
+                <option value="medium">Medium</option>
+                <option value="high">High</option>
+              </select>
+              <div className="flex gap-2">
+                <button
+                  onClick={handleUpdate}
+                  className="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600"
+                >
+                  Save
+                </button>
+                <button
+                  onClick={() => setIsEditing(false)}
+                  className="px-3 py-1 bg-gray-200 text-gray-700 rounded hover:bg-gray-300"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          ) : (
+            <>
+              <div className="flex items-center justify-between">
+                <h3 className={`text-lg font-semibold ${isCompleted ? 'line-through text-gray-500' : ''}`}>
+                  {title}
+                </h3>
+                <div className="flex items-center gap-2">
+                  <span className={`px-2 py-1 rounded-full text-sm ${getPriorityColor(priority)}`}>
+                    {priority}
+                  </span>
+                  <span className="bg-gray-100 text-gray-600 px-2 py-1 text-xs rounded flex items-center gap-1">
+                    <Clock size={12} /> {time}
+                  </span>
+                  <button
+                    onClick={() => setIsEditing(true)}
+                    className="text-gray-400 hover:text-blue-500 transition-colors"
+                  >
+                    <Pencil size={16} />
+                  </button>
+                  <button
+                    onClick={onDelete}
+                    className="text-gray-400 hover:text-red-500 transition-colors"
+                  >
+                    <Trash2 size={16} />
+                  </button>
+                </div>
+              </div>
+              <p className={`mt-2 text-gray-600 ${isCompleted ? 'line-through text-gray-400' : ''}`}>
+                {description}
+              </p>
+            </>
+          )}
+        </div>
+      </div>
     </div>
   );
 };
