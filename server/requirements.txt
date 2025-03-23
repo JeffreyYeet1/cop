@@ -9,5 +9,9 @@ PyJWT[crypto]==2.8.0
 langchain==0.1.12
 langchain-community>=0.0.28
 cohere==4.52
-pydantic==2.5.3
-cryptography==44.0.2 
+pydantic>=2.6.0
+cryptography==44.0.2
+google-auth-oauthlib==1.2.0
+google-auth-httplib2==0.2.0
+google-api-python-client==2.121.0
+itsdangerous==2.1.2 

@@ -1,9 +1,11 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from api.routes import auth, users, onboarding, todo, peka
+from starlette.middleware.sessions import SessionMiddleware
+from api.routes import auth, users, onboarding, todo, peka, calendar
 import logging
 from dotenv import load_dotenv
 import os
+import secrets
 
 # Configure logging
 logging.basicConfig(
@@ -21,6 +23,16 @@ cohere_key = os.getenv("COHERE_API_KEY")
 logger.info(f"Cohere API key loaded: {'Found' if cohere_key else 'Not found'}")
 
 app = FastAPI(title="Peka API")
+
+# Configure session middleware with a secure secret key
+app.add_middleware(
+    SessionMiddleware,
+    secret_key=os.getenv("SESSION_SECRET_KEY", secrets.token_urlsafe(32)),
+    session_cookie="session",
+    max_age=60 * 60 * 24 * 7,  # 7 days
+    same_site="lax",
+    https_only=False  # Set to True in production
+)
 
 # Configure CORS
 app.add_middleware(
