@@ -11,6 +11,7 @@ def get_user(db, username: str) -> Optional[UserInDB]:
             # Convert the password field to hashed_password for the model
             user_data = user.data[0]
             # Ensure all required fields are present with defaults
+            user_data.setdefault('id', user_data.get('id'))  # Include the ID field
             user_data.setdefault('name', '')
             user_data.setdefault('email', username)
             user_data.setdefault('created_at', None)
