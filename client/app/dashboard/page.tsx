@@ -20,10 +20,12 @@ export default function DashboardPage() {
         <div className="flex justify-between items-center p-8 animate-fadeIn" style={{animationDelay: "0.1s"}}>
           <h1 className="text-4xl font-bold text-gray-900">Dashboard</h1>
           <div className="flex items-center space-x-4">
-            <div className="text-sm text-gray-500 flex items-center space-x-2">
-              <span>Press</span>
-              <kbd className="px-2 py-1 bg-gray-100 rounded-md text-gray-700 font-mono">⌘O</kbd>
-              <span>to talk to Peka</span>
+            <div className="group px-4 py-2 bg-white/50 backdrop-blur-sm rounded-xl border border-gray-100 shadow-sm hover:shadow-md transition-all duration-500 hover:-translate-y-1 hover:border-sky-100">
+              <div className="text-sm text-gray-500 flex items-center space-x-2 group-hover:translate-x-0.5 transition-all duration-500">
+                <span className="group-hover:text-gray-600 transition-colors duration-300">Press</span>
+                <kbd className="px-2 py-1 bg-white rounded-md text-sky-500 font-mono shadow-sm border border-sky-100 group-hover:scale-110 transition-all duration-300">⌘O</kbd>
+                <span className="group-hover:text-gray-600 transition-colors duration-300">to talk to Peka</span>
+              </div>
             </div>
           </div>
         </div>
