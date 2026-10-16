@@ -1,435 +1,64 @@
 "use client";
-
-import React, { useEffect, useState, useRef } from 'react';
-import { createPortal } from 'react-dom';
-import TaskCard from './TaskCard';
-import { Plus, X, Loader2 } from 'lucide-react';
-import { todoService } from '../services/todoService';
+import { FormEvent, useEffect, useRef, useState } from 'react';
+import { Check, Clock3, GripVertical, Loader2, Pencil, Plus, Trash2, X } from 'lucide-react';
 import { Task, Priority } from '../types';
+import { todoService } from '../services/todoService';
 
-const NewTaskModal: React.FC<{
-  isOpen: boolean;
-  onClose: () => void;
-  onSubmit: (task: { title: string; description: string; priority: Priority; estimated_duration: number }) => void;
-}> = ({ isOpen, onClose, onSubmit }) => {
-  const [newTask, setNewTask] = useState({
-    title: '',
-    description: '',
-    priority: 'low' as Priority,
-    estimated_duration: 30
-  });
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-    return () => setMounted(false);
-  }, []);
-
-  if (!isOpen || !mounted) return null;
-
-  const modalRoot = document.getElementById('modal-root');
-  if (!modalRoot) return null;
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    onSubmit(newTask);
-    setNewTask({
-      title: '',
-      description: '',
-      priority: 'low',
-      estimated_duration: 30
-    });
-    onClose();
-  };
-
-  return createPortal(
-    <div className="fixed inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center animate-fadeIn">
-      <div 
-        className="bg-white/80 backdrop-blur-sm rounded-3xl p-8 w-full max-w-md shadow-xl transform transition-all duration-300 animate-scaleUp"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="flex justify-between items-center mb-6">
-          <h3 className="text-xl font-semibold text-gray-900">Create New Task</h3>
-          <button
-            onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 transition-all duration-300"
-          >
-            <X size={20} />
-          </button>
-        </div>
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Title
-            </label>
-            <input
-              type="text"
-              value={newTask.title}
-              onChange={(e) => setNewTask({ ...newTask, title: e.target.value })}
-              className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-500/50 transition-all duration-200"
-              placeholder="Enter task title"
-              required
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Description
-            </label>
-            <textarea
-              value={newTask.description}
-              onChange={(e) => setNewTask({ ...newTask, description: e.target.value })}
-              className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-500/50 transition-all duration-200"
-              placeholder="Enter task description"
-              rows={3}
-            />
-          </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Priority
-              </label>
-              <select
-                value={newTask.priority}
-                onChange={(e) => setNewTask({ ...newTask, priority: e.target.value as Priority })}
-                className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-500/50 transition-all duration-200"
-              >
-                <option value="low">Low</option>
-                <option value="medium">Medium</option>
-                <option value="high">High</option>
-              </select>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Duration (min)
-              </label>
-              <input
-                type="number"
-                value={newTask.estimated_duration}
-                onChange={(e) => setNewTask({ ...newTask, estimated_duration: parseInt(e.target.value) })}
-                className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-500/50 transition-all duration-200"
-                min="1"
-              />
-            </div>
-          </div>
-          <div className="flex justify-end gap-3 pt-4">
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-6 py-2.5 text-gray-600 hover:text-gray-900 bg-gray-50 hover:bg-gray-100 rounded-xl transition-all duration-200"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              className="px-6 py-2.5 bg-sky-500 text-white rounded-xl hover:bg-sky-600 transition-all duration-200"
-            >
-              Create Task
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>,
-    modalRoot
-  );
-};
-
-const DailyTasks = () => {
-  const [todos, setTodos] = useState<Task[]>([]);
+const empty = { title: '', description: '', priority: 'medium' as Priority, estimated_duration: 30 };
+export default function DailyTasks() {
+  const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [showNewTaskModal, setShowNewTaskModal] = useState(false);
-  const [newTask, setNewTask] = useState({
-    title: '',
-    description: '',
-    priority: 'medium' as Priority,
-    estimated_duration: 30
-  });
-
-  const date = new Date();
-  const dayName = date.toLocaleString('en-US', { weekday: 'long' });
-  const monthDay = date.toLocaleString('en-US', { month: 'long', day: 'numeric' });
-
-  useEffect(() => {
-    const fetchTodos = async () => {
-      try {
-        const data = await todoService.getAllTodos();
-        setTodos(data);
-      } catch (err) {
-        setError('Failed to fetch todos');
-        console.error('Error fetching todos:', err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchTodos();
-    window.addEventListener('taskUpdated', fetchTodos);
-    return () => window.removeEventListener('taskUpdated', fetchTodos);
-  }, []);
-
-  const handleAddTodo = async (taskData: { title: string; description: string; priority: Priority; estimated_duration: number }) => {
+  const [error, setError] = useState('');
+  const [formError, setFormError] = useState('');
+  const [saving, setSaving] = useState(false);
+  const [pending, setPending] = useState<number | null>(null);
+  const [filter, setFilter] = useState<'open' | 'all' | 'done'>('open');
+  const [form, setForm] = useState(empty);
+  const [editing, setEditing] = useState<number | null>(null);
+  const dialog = useRef<HTMLDialogElement>(null);
+  const refresh = async () => {
+    try { setTasks(await todoService.getAllTodos()); setError(''); }
+    catch (failure) { setError(failure instanceof Error ? failure.message : 'Could not load tasks.'); }
+    finally { setLoading(false); }
+  };
+  useEffect(() => { void refresh(); window.addEventListener('taskUpdated', refresh); return () => window.removeEventListener('taskUpdated', refresh); }, []);
+  const changed = () => window.dispatchEvent(new Event('activityUpdated'));
+  const open = (task?: Task) => {
+    setEditing(task?.id || null); setForm(task ? { title: task.title, description: task.description, priority: task.priority, estimated_duration: task.estimated_duration || 30 } : empty); setFormError(''); dialog.current?.showModal();
+  };
+  const save = async (event: FormEvent) => {
+    event.preventDefault(); setSaving(true); setFormError('');
     try {
-      const newTodo = await todoService.createTodo(taskData);
-      setTodos([...todos, newTodo]);
-      setShowNewTaskModal(false);
-    } catch (err) {
-      console.error('Error creating todo:', err);
-      setError('Failed to create todo');
-    }
+      const task = editing ? await todoService.updateTodo(editing, form) : await todoService.createTodo(form);
+      setTasks(previous => editing ? previous.map(item => item.id === task.id ? task : item) : [...previous, task]);
+      dialog.current?.close(); changed();
+    } catch (failure) { setFormError(failure instanceof Error ? failure.message : 'Could not save the task.'); }
+    finally { setSaving(false); }
   };
-
-  const handleDeleteTodo = async (id: number) => {
-    try {
-      await todoService.deleteTodo(id);
-      setTodos(todos.filter(todo => todo.id !== id));
-    } catch (err) {
-      console.error('Error deleting todo:', err);
-      setError('Failed to delete todo');
-    }
+  const complete = async (task: Task) => {
+    setPending(task.id); setError('');
+    try { const updated = await todoService.setCompletion(task.id, !task.completed_at); setTasks(previous => previous.map(item => item.id === updated.id ? updated : item)); changed(); }
+    catch (failure) { setError(failure instanceof Error ? failure.message : 'Could not save completion.'); }
+    finally { setPending(null); }
   };
-
-  const handleUpdateTodo = async (updatedTodo: Task) => {
-    try {
-      setTodos(todos.map(todo => 
-        todo.id === updatedTodo.id ? updatedTodo : todo
-      ));
-    } catch (err) {
-      console.error('Error updating todo:', err);
-      setError('Failed to update todo');
-    }
+  const remove = async (task: Task) => {
+    if (!window.confirm(`Delete “${task.title}”?`)) return;
+    setPending(task.id);
+    try { await todoService.deleteTodo(task.id); setTasks(previous => previous.filter(item => item.id !== task.id)); changed(); }
+    catch (failure) { setError(failure instanceof Error ? failure.message : 'Could not delete the task.'); }
+    finally { setPending(null); }
   };
-
-  const handleDragStart = (e: React.DragEvent<HTMLDivElement>, id: number) => {
-    e.dataTransfer.setData('text/plain', id.toString());
-    e.currentTarget.classList.add('opacity-70', 'scale-105', 'rotate-1');
-    e.currentTarget.classList.remove('animate-fadeIn');
-  };
-
-  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault();
-    const draggingElement = document.querySelector('.opacity-70');
-    if (draggingElement) {
-      const dropTarget = e.currentTarget as HTMLElement;
-      if (dropTarget === draggingElement) return;
-      
-      dropTarget.classList.add('drag-indicator');
-    }
-  };
-
-  const handleDragEnd = (e: React.DragEvent<HTMLDivElement>) => {
-    e.currentTarget.classList.remove('opacity-70', 'scale-105', 'rotate-1');
-    e.currentTarget.classList.add('animate-fadeIn');
-    document.querySelectorAll('.drag-indicator').forEach(el => {
-      el.classList.remove('drag-indicator');
-    });
-  };
-
-  const handleDrop = (e: React.DragEvent<HTMLDivElement>, targetId: number) => {
-    e.preventDefault();
-    const draggedId = parseInt(e.dataTransfer.getData('text/plain'));
-    if (draggedId === targetId) return;
-
-    const draggedIndex = todos.findIndex(todo => todo.id === draggedId);
-    const targetIndex = todos.findIndex(todo => todo.id === targetId);
-    
-    const newTodos = [...todos];
-    const [draggedTodo] = newTodos.splice(draggedIndex, 1);
-    newTodos.splice(targetIndex, 0, draggedTodo);
-    
-    setTodos(newTodos);
-    handleDragEnd(e);
-  };
-
-  const handleCreateTask = async () => {
-    try {
-      const taskData = {
-        ...newTask,
-        user_id: 'current-user', // This should come from your auth context
-      };
-      
-      const createdTask = await todoService.createTodo(taskData);
-      setTodos(prevTodos => [...prevTodos, createdTask]);
-      setShowNewTaskModal(false);
-      setNewTask({
-        title: '',
-        description: '',
-        priority: 'medium' as Priority,
-        estimated_duration: 30
-      });
-    } catch (error) {
-      console.error('Error creating task:', error);
-      setError('Failed to create task');
-    }
-  };
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-full">
-        <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="flex items-center justify-center h-full">
-        <div className="text-red-500 bg-red-50 dark:bg-red-900/20 px-4 py-2 rounded-lg">
-          {error}
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <>
-      <div className={`p-5 min-h-full bg-white ${showNewTaskModal ? 'blur-sm' : ''} transition-all duration-300`}>
-        {/* Header */}
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center space-x-2">
-            <div className="w-3 h-3 bg-violet-500 rounded-full animate-pulse"></div>
-            <h2 className="text-2xl font-semibold text-gray-900">Todo</h2>
-          </div>
-          <button
-            onClick={() => setShowNewTaskModal(true)}
-            className="inline-flex items-center gap-2 px-4 py-2 bg-violet-50 text-violet-600 rounded-xl hover:bg-violet-100 transition-all duration-300 shadow-sm hover:shadow-md transform hover:-translate-y-1"
-          >
-            <Plus size={16} />
-            <span className="text-sm font-medium">Add Task</span>
-          </button>
-        </div>
-
-        {todos.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-12 animate-fadeIn" style={{animationDelay: "0.3s"}}>
-            <div className="w-14 h-14 bg-blue-50 rounded-full flex items-center justify-center mb-3 transform hover:scale-110 transition-all duration-300">
-              <Plus size={20} className="text-blue-500" />
-            </div>
-            <div className="text-gray-500 mb-3 text-center">
-              No tasks for today. Click "Add Task" to add one!
-            </div>
-            <button 
-              onClick={() => setShowNewTaskModal(true)}
-              className="text-blue-500 hover:text-blue-600 font-medium transition-all duration-300 transform hover:-translate-y-1"
-            >
-              Create your first task
-            </button>
-          </div>
-        ) : (
-          <div className="space-y-3">
-            {todos.map((todo, index) => (
-              <TaskCard
-                key={todo.id}
-                id={todo.id}
-                completed_at={todo.completed_at}
-                title={todo.title}
-                description={todo.description}
-                time={`${todo.estimated_duration}min`}
-                priority={todo.priority as Priority}
-                onDelete={() => handleDeleteTodo(todo.id)}
-                onUpdate={handleUpdateTodo}
-                onDragStart={handleDragStart}
-                onDragOver={handleDragOver}
-                onDrop={handleDrop}
-                style={{animationDelay: `${0.3 + index * 0.08}s`}}
-              />
-            ))}
-          </div>
-        )}
-      </div>
-
-      {showNewTaskModal && createPortal(
-        <>
-          <div className="fixed inset-0 backdrop-blur-sm bg-black/20" style={{ zIndex: 99998 }} />
-          <div className="fixed inset-0 flex items-center justify-center" style={{ zIndex: 99999 }}>
-            <div className="bg-white rounded-2xl p-6 w-full max-w-md shadow-xl">
-              <div className="flex justify-between items-center mb-4">
-                <h2 className="text-xl font-semibold text-gray-900">Create New Task</h2>
-                <button 
-                  onClick={() => setShowNewTaskModal(false)}
-                  className="text-gray-500 hover:text-gray-700"
-                >
-                  <X size={20} />
-                </button>
-              </div>
-              
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Task Title
-                  </label>
-                  <input
-                    type="text"
-                    value={newTask.title}
-                    onChange={(e) => setNewTask({...newTask, title: e.target.value})}
-                    className="w-full px-4 py-2 rounded-xl border border-gray-200 focus:border-violet-500 focus:ring-1 focus:ring-violet-500"
-                    placeholder="Enter task title"
-                  />
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Description
-                  </label>
-                  <textarea
-                    value={newTask.description}
-                    onChange={(e) => setNewTask({...newTask, description: e.target.value})}
-                    className="w-full px-4 py-2 rounded-xl border border-gray-200 focus:border-violet-500 focus:ring-1 focus:ring-violet-500"
-                    rows={3}
-                    placeholder="Enter task description"
-                  />
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Priority
-                  </label>
-                  <select
-                    value={newTask.priority}
-                    onChange={(e) => setNewTask({...newTask, priority: e.target.value as Priority})}
-                    className="w-full px-4 py-2 rounded-xl border border-gray-200 focus:border-violet-500 focus:ring-1 focus:ring-violet-500"
-                  >
-                    <option value="low">Low</option>
-                    <option value="medium">Medium</option>
-                    <option value="high">High</option>
-                  </select>
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Estimated Duration (minutes)
-                  </label>
-                  <input
-                    type="number"
-                    value={newTask.estimated_duration}
-                    onChange={(e) => setNewTask({...newTask, estimated_duration: parseInt(e.target.value)})}
-                    className="w-full px-4 py-2 rounded-xl border border-gray-200 focus:border-violet-500 focus:ring-1 focus:ring-violet-500"
-                    min="5"
-                    step="5"
-                  />
-                </div>
-              </div>
-              
-              <div className="mt-6 flex justify-end space-x-3">
-                <button
-                  onClick={() => setShowNewTaskModal(false)}
-                  className="px-4 py-2 text-gray-700 hover:text-gray-900"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleCreateTask}
-                  className="px-6 py-2 bg-violet-500 text-white rounded-xl hover:bg-violet-600 transition-all duration-300"
-                  disabled={!newTask.title}
-                >
-                  Create Task
-                </button>
-              </div>
-            </div>
-          </div>
-        </>,
-        document.getElementById('modal-root') || document.body
-      )}
-    </>
-  );
-};
-
-export default DailyTasks;
+  const visible = tasks.filter(task => filter === 'all' || (filter === 'done' ? !!task.completed_at : !task.completed_at));
+  return <section className="rounded-2xl border border-stone-200 bg-white p-5 sm:p-6 min-w-0" aria-labelledby="tasks-title">
+    <header className="flex justify-between gap-3 items-center"><div><h2 id="tasks-title" className="font-semibold text-base">Your priorities</h2><p className="text-xs text-stone-500 mt-1">Start with one manageable next step.</p></div><button onClick={() => open()} className="flex items-center gap-2 rounded-lg bg-violet-700 px-3 py-2 text-xs text-white hover:bg-violet-800"><Plus size={15} />Add task</button></header>
+    <div className="flex gap-1 border-b border-stone-100 mt-5 pb-3">{(['open', 'all', 'done'] as const).map(value => <button key={value} aria-pressed={filter === value} onClick={() => setFilter(value)} className={`rounded-md px-3 py-1.5 text-xs capitalize ${filter === value ? 'bg-stone-100 text-stone-800' : 'text-stone-500'}`}>{value === 'open' ? 'To do' : value}</button>)}</div>
+    {error && <div role="alert" className="bg-red-50 border border-red-100 rounded-lg p-3 text-xs text-red-700 mt-4">{error}<button onClick={refresh} className="underline ml-3">Retry</button></div>}
+    {loading ? <p role="status" className="flex gap-2 text-sm text-stone-500 py-10"><Loader2 className="animate-spin" size={17} />Loading your tasks…</p> : visible.length === 0 ? <div className="py-14 text-center"><div className="rounded-full bg-[#f0f3e8] w-11 h-11 mx-auto mb-4 flex items-center justify-center text-[#8b9a71]"><Check size={20} /></div><p className="text-sm text-stone-600">{tasks.length ? 'A little breathing room.' : 'A clearer day starts here.'}</p><p className="text-xs text-stone-500 mt-2">{tasks.length ? 'Switch tabs to see the rest of your list.' : 'Capture a task, give it some time, and take it from there.'}</p></div> : <ul className="divide-y divide-stone-100">{visible.map(task => <li key={task.id} id={`task-${task.id}`} draggable={!task.completed_at} onDragStart={event => { event.dataTransfer.setData('application/json', JSON.stringify({ type: 'task', data: { ...task, duration: task.estimated_duration || 30 } })); }} className="py-4 flex items-start gap-3 group">
+      <button disabled={pending === task.id} onClick={() => complete(task)} aria-label={task.completed_at ? `Reopen ${task.title}` : `Complete ${task.title}`} aria-pressed={!!task.completed_at} className={`w-5 h-5 rounded-md border shrink-0 mt-0.5 flex items-center justify-center disabled:opacity-40 ${task.completed_at ? 'bg-violet-600 text-white border-violet-600' : 'border-stone-300 hover:border-violet-400'}`}>{task.completed_at && <Check size={12} />}</button>
+      <div className="min-w-0 flex-1"><p className={`text-sm break-words ${task.completed_at ? 'line-through text-stone-400' : 'text-stone-800'}`}>{task.title}</p>{task.description && <p className="text-xs text-stone-500 mt-1.5 break-words line-clamp-2">{task.description}</p>}<div className="flex flex-wrap items-center gap-3 mt-2 text-[10px] text-stone-500"><span className={`rounded px-1.5 py-0.5 ${task.priority === 'high' ? 'bg-amber-50 text-amber-800' : task.priority === 'medium' ? 'bg-violet-50 text-violet-700' : 'bg-stone-100 text-stone-600'}`}>{task.priority} priority</span><span className="inline-flex items-center gap-1"><Clock3 size={11} />{task.estimated_duration || 30} min</span></div></div>
+      <div className="flex gap-1"><button aria-label={`Edit ${task.title}`} onClick={() => open(task)} className="p-1.5 text-stone-400 hover:text-violet-700"><Pencil size={14} /></button><button disabled={pending === task.id} aria-label={`Delete ${task.title}`} onClick={() => remove(task)} className="p-1.5 text-stone-400 hover:text-red-600"><Trash2 size={14} /></button></div>
+    </li>)}</ul>}
+    <p className="text-[10px] text-stone-400 mt-3 flex gap-1.5 items-center"><GripVertical size={12} />Drag an open task into your day plan.</p>
+    <dialog ref={dialog} aria-labelledby="task-dialog-title" className="rounded-2xl border border-stone-200 p-6 w-[calc(100%-2rem)] max-w-md backdrop:bg-stone-900/20 shadow-xl" onCancel={event => { if (saving) event.preventDefault(); }}><form onSubmit={save}><div className="flex items-center justify-between mb-6"><h2 id="task-dialog-title" className="font-semibold text-lg">{editing ? 'Edit task' : 'Make a little plan'}</h2><button type="button" aria-label="Close task form" disabled={saving} onClick={() => dialog.current?.close()}><X size={18} /></button></div><label className="block text-xs text-stone-600">What needs doing?<input required maxLength={200} value={form.title} onChange={event => setForm({ ...form, title: event.target.value })} className="block w-full border border-stone-200 rounded-lg p-3 mt-2 text-sm" autoFocus /></label><label className="block text-xs text-stone-600 mt-4">A little context<textarea value={form.description} maxLength={3000} onChange={event => setForm({ ...form, description: event.target.value })} rows={3} className="block w-full border border-stone-200 rounded-lg p-3 mt-2 text-sm" /></label><div className="grid grid-cols-2 gap-4 mt-4"><label className="text-xs text-stone-600">Priority<select value={form.priority} onChange={event => setForm({ ...form, priority: event.target.value as Priority })} className="block w-full border rounded-lg p-2 mt-2">{['low','medium','high'].map(value => <option key={value}>{value}</option>)}</select></label><label className="text-xs text-stone-600">Minutes<input type="number" required min={1} max={1440} value={form.estimated_duration} onChange={event => setForm({ ...form, estimated_duration: Number(event.target.value) })} className="block w-full border rounded-lg p-2 mt-2" /></label></div>{formError && <p role="alert" className="text-xs text-red-700 mt-4">{formError}</p>}<button disabled={saving || !form.title.trim()} className="w-full rounded-xl bg-violet-700 text-white py-3 text-sm mt-6 disabled:opacity-50">{saving ? 'Saving…' : editing ? 'Save changes' : 'Add to my list'}</button></form></dialog>
+  </section>;
+}
