@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.middleware.sessions import SessionMiddleware
-from api.routes import auth, users, onboarding, todo, peka, calendar, rag
+from api.routes import auth, users, onboarding, todo, peka, calendar, rag, insights
 import logging
 from dotenv import load_dotenv
 import os
@@ -44,6 +44,7 @@ app.add_middleware(
 )
 
 app.include_router(rag.router, prefix="/api/rag")
+app.include_router(insights.router, prefix="/api/insights")
 
 # Add request logging middleware
 @app.middleware("http")
