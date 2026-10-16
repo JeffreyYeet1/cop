@@ -1,5 +1,6 @@
 "use client";
 
+import { apiUrl } from '../services/api';
 import { useState } from "react";
 import Link from "next/link";
 import { Button } from "./ui2/button";
@@ -48,7 +49,7 @@ export function LoginForm() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (validateForm()) {
       setIsLoading(true);
       try {
@@ -56,13 +57,13 @@ export function LoginForm() {
         formDataToSend.append('username', formData.email.toLowerCase()); // Send lowercase email as username
         formDataToSend.append('password', formData.password);
         formDataToSend.append('scope', 'me items'); // Add required scopes
-        
+
         console.log('Sending request with data:', {
           email: formData.email.toLowerCase(),
           password: '[REDACTED]'
         });
-        
-        const response = await fetch('http://localhost:8000/api/auth/token', {
+
+        const response = await fetch(apiUrl('/auth/token'), {
           method: 'POST',
           headers: {
             'Content-Type': 'application/x-www-form-urlencoded',
@@ -72,10 +73,10 @@ export function LoginForm() {
         });
 
         console.log('Response status:', response.status);
-        
+
         const data = await response.json();
         console.log('Response data:', data);
-        
+
         if (!response.ok) {
           if (data.detail === "Incorrect email or password") {
             throw new Error("Invalid email or password. Please try again.");
@@ -87,18 +88,18 @@ export function LoginForm() {
         // Store the actual token from the server
         localStorage.setItem('token', data.access_token);
         console.log('Token stored in localStorage');
-        
+
         // Check if user has completed onboarding
-        const onboardingResponse = await fetch('http://localhost:8000/api/onboarding/preferences', {
+        const onboardingResponse = await fetch(apiUrl('/onboarding/preferences'), {
           method: 'GET',
           headers: {
             'Authorization': `Bearer ${data.access_token}`,
           },
         });
-        
+
         if (onboardingResponse.ok) {
           const onboardingData = await onboardingResponse.json();
-          
+
           // If user has existing preferences, redirect directly to dashboard
           if (onboardingData.preferences && onboardingData.preferences.length > 0) {
             router.push('/dashboard');

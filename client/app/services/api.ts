@@ -1,10 +1,11 @@
 // Same-origin by default; Next proxies API calls to the configured backend.
 const base = (process.env.NEXT_PUBLIC_API_URL || '').replace(/\/$/, '');
+export const apiUrl = (path: string) => `${base}/api${path}`;
 
 export async function api<T>(path: string, options: RequestInit = {}): Promise<T> {
   const token = localStorage.getItem('token');
   if (!token) throw new Error('Sign in to save your activity.');
-  const response = await fetch(`${base}/api${path}`, {
+  const response = await fetch(apiUrl(path), {
     ...options,
     headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}`, ...options.headers },
   });

@@ -1,5 +1,6 @@
 'use client';
 
+import { apiUrl } from '../../services/api';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import AppShell from '../AppShell';
@@ -14,7 +15,7 @@ export default function DashboardPage() {
       const token = localStorage.getItem('token');
       if (!token) return;
 
-      const response = await fetch('http://localhost:8000/api/todo/', {
+      const response = await fetch(apiUrl('/todo/'), {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -71,7 +72,7 @@ export default function DashboardPage() {
       <div className="p-6">
         <h1 className="text-2xl font-bold mb-4">Dashboard</h1>
         <p>Welcome to your personalized dashboard!</p>
-        
+
         {/* Display tasks */}
         <div className="mt-6">
           <h2 className="text-xl font-semibold mb-4">Your Tasks</h2>

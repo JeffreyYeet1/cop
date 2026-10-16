@@ -1,5 +1,6 @@
 'use client';
 
+import { apiUrl } from '../services/api';
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 
@@ -88,28 +89,28 @@ const OnboardingScreen = () => {
     try {
       setIsSaving(true);
       setError(null);
-      
+
       // Get the token from localStorage
       const token = localStorage.getItem('token');
       if (!token) {
         router.push('/login');
         return;
       }
-      
+
       // Format the preferences data
       const formattedPreferences = Object.entries(selectedAnswers).map(([questionId, answerId]) => {
         const question = questions.find(q => q.id === parseInt(questionId));
         const option = question?.options.find(o => o.id === answerId);
-        
+
         return {
           questionText: question?.text || '',
           answerId: answerId,
           answerText: option?.text || '',
         };
       });
-      
+
       // Make API call to save to database
-      const response = await fetch('http://localhost:8000/api/onboarding/preferences', {
+      const response = await fetch(apiUrl('/onboarding/preferences'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -119,7 +120,7 @@ const OnboardingScreen = () => {
           preferences: formattedPreferences,
         }),
       });
-      
+
       if (!response.ok) {
         const contentType = response.headers.get('content-type');
         if (contentType && contentType.includes('application/json')) {
@@ -129,9 +130,9 @@ const OnboardingScreen = () => {
           throw new Error(`Server error: ${response.status} ${response.statusText}`);
         }
       }
-      
+
       console.log('Preferences saved successfully');
-      
+
     } catch (err) {
       console.error('Error saving preferences:', err);
       setError(err instanceof Error ? err.message : 'An unknown error occurred');
@@ -148,7 +149,7 @@ const OnboardingScreen = () => {
         return;
       }
 
-      const response = await fetch('http://localhost:8000/api/onboarding/preferences', {
+      const response = await fetch(apiUrl('/onboarding/preferences'), {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -166,7 +167,7 @@ const OnboardingScreen = () => {
       }
 
       const data = await response.json();
-      
+
       // Convert the loaded preferences back to our format
       if (data.preferences && data.preferences.length > 0) {
         const loadedAnswers: Record<number, string> = {};
@@ -177,7 +178,7 @@ const OnboardingScreen = () => {
           }
         });
         setSelectedAnswers(loadedAnswers);
-        
+
         // If all questions are answered, redirect directly to dashboard
         if (Object.keys(loadedAnswers).length === questions.length) {
           console.log('All questions already answered, redirecting to dashboard');
@@ -206,7 +207,7 @@ const OnboardingScreen = () => {
         }
       }
     };
-    
+
     checkOnboardingStatus();
   }, []);
 

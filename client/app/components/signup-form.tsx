@@ -1,5 +1,6 @@
 "use client";
 
+import { apiUrl } from '../services/api';
 import { useState } from "react";
 import Link from "next/link";
 import { Button } from "./ui2/button";
@@ -75,7 +76,7 @@ export function SignUpForm() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (validateForm()) {
       setIsLoading(true);
       try {
@@ -84,13 +85,13 @@ export function SignUpForm() {
           email: formData.email,
           password: formData.password,
         };
-        
+
         console.log('Sending request with data:', {
           ...requestData,
           password: '[REDACTED]'
         });
-        
-        const response = await fetch('http://localhost:8000/api/users', {
+
+        const response = await fetch(apiUrl('/users'), {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -101,10 +102,10 @@ export function SignUpForm() {
 
         console.log('Response status:', response.status);
         console.log('Response headers:', Object.fromEntries(response.headers.entries()));
-        
+
         const data = await response.json();
         console.log('Response data:', data);
-        
+
         if (!response.ok) {
           // Handle specific error messages from the server
           if (data.detail) {

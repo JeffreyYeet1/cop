@@ -1,5 +1,6 @@
 "use client";
 
+import { apiUrl } from '../../../services/api';
 import { Suspense, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
@@ -18,7 +19,7 @@ function GoogleCallbackContent() {
 
       try {
         console.log("Making request to backend with code");
-        const response = await fetch("http://localhost:8000/api/auth/google", {
+        const response = await fetch(apiUrl('/auth/google'), {
           method: "POST",
           credentials: "include",
           headers: {
@@ -44,7 +45,7 @@ function GoogleCallbackContent() {
         // Check if user has completed onboarding
         console.log("Checking onboarding status");
         const onboardingResponse = await fetch(
-          "http://localhost:8000/api/onboarding/preferences",
+          apiUrl('/onboarding/preferences'),
           {
             credentials: "include",
             headers: {

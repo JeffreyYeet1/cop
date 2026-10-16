@@ -1,5 +1,6 @@
 "use client";
 
+import { apiUrl } from '../services/api';
 import React, { useEffect, useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Search, Sparkles } from 'lucide-react';
@@ -41,7 +42,7 @@ export default function PekaCommandPalette() {
         throw new Error('No authentication token found');
       }
 
-      const response = await fetch('http://localhost:8000/api/peka/query', {
+      const response = await fetch(apiUrl('/peka/query'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -123,7 +124,7 @@ export default function PekaCommandPalette() {
         </div>
         <div className="flex-1">
           <p className="text-gray-800">{response.message}</p>
-          
+
           {response.intent === 'create' && response.task_details?.title && (
             <div className="mt-4">
               <h4 className="text-sm font-medium text-gray-700 mb-2">Created Task:</h4>
@@ -227,4 +228,4 @@ export default function PekaCommandPalette() {
       </AnimatePresence>
     </>
   );
-} 
+}

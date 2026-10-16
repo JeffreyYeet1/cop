@@ -1,5 +1,6 @@
 'use client';
 
+import { apiUrl } from '../services/api';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { usePathname } from 'next/navigation';
@@ -18,7 +19,7 @@ export default function ProtectedRoute({ children }: ProtectedRouteProps) {
     const verifyAuth = async () => {
       try {
         const token = localStorage.getItem('token');
-        
+
         if (!token) {
           // No token found, redirect to login
           router.push(`/login?redirect=${encodeURIComponent(pathname)}`);
@@ -26,7 +27,7 @@ export default function ProtectedRoute({ children }: ProtectedRouteProps) {
         }
 
         // Verify token with backend
-        const response = await fetch('http://localhost:8000/api/users/me', {
+        const response = await fetch(apiUrl('/users/me'), {
           headers: {
             'Authorization': `Bearer ${token}`,
           },
@@ -61,4 +62,4 @@ export default function ProtectedRoute({ children }: ProtectedRouteProps) {
   }
 
   return isAuthenticated ? <>{children}</> : null;
-} 
+}
