@@ -1,236 +1,98 @@
 "use client";
+import { useEffect, useRef, useState } from 'react';
+import { Check, Clock3, Pause, Play, RotateCcw } from 'lucide-react';
+import { insightsService } from '../services/insightsService';
+import { focusStorageKey, remainingSeconds } from '../../lib/focusClock';
 
-import React, { useState, useEffect } from 'react';
-import { Play, Pause, RotateCcw, Settings, X } from 'lucide-react';
+type Timer = { id: string | null; planned: number; remaining: number; deadline: number | null; phase: 'idle' | 'starting' | 'running' | 'paused' | 'pending' | 'saved'; outcome?: 'completed' | 'abandoned' };
+const fresh = (minutes: number): Timer => ({ id: null, planned: minutes * 60, remaining: minutes * 60, deadline: null, phase: 'idle' });
 
-interface TimerSettings {
-  pomodoro: number;
-  shortBreak: number;
-  longBreak: number;
-}
-
-const PomodoroTimer: React.FC = () => {
-  const [minutes, setMinutes] = useState(25);
-  const [seconds, setSeconds] = useState(0);
-  const [isActive, setIsActive] = useState(false);
-  const [selectedMode, setSelectedMode] = useState<'Pomodoro' | 'Short Break' | 'Long Break'>('Pomodoro');
-  const [showSettings, setShowSettings] = useState(false);
-  const [settings, setSettings] = useState<TimerSettings>({
-    pomodoro: 25,
-    shortBreak: 5,
-    longBreak: 15
-  });
+export default function PomodoroTimer() {
+  const [timer, setTimer] = useState<Timer>(fresh(25));
+  const [duration, setDuration] = useState(25);
+  const [mode, setMode] = useState<'focus' | 'short' | 'long'>('focus');
+  const [ready, setReady] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState('');
+  const key = useRef<string | null>(null);
+  const saving = useRef(false);
 
   useEffect(() => {
-    let interval: NodeJS.Timeout;
+    key.current = focusStorageKey(localStorage.getItem('token'));
+    try {
+      const saved = JSON.parse(localStorage.getItem(key.current || '') || 'null') as Timer | null;
+      if (saved && typeof saved.id === 'string' && Number.isFinite(saved.planned) && saved.planned >= 60 && saved.planned <= 14400 && Number.isFinite(saved.remaining) && saved.remaining >= 0 && saved.remaining <= saved.planned && ['starting', 'running', 'paused', 'pending', 'saved'].includes(saved.phase)) {
+        const remaining = saved.phase === 'running' && Number.isFinite(saved.deadline) ? remainingSeconds(saved.deadline!) : saved.remaining;
+        setTimer({ ...saved, remaining, phase: remaining === 0 && saved.phase === 'running' ? 'pending' : saved.phase, outcome: remaining === 0 ? 'completed' : saved.outcome });
+        setDuration(saved.planned / 60);
+      }
+    } catch { /* Invalid local state must not prevent a new session. */ }
+    setReady(true);
+  }, []);
 
-    if (isActive) {
-      interval = setInterval(() => {
-        if (seconds === 0) {
-          if (minutes === 0) {
-            setIsActive(false);
-            // Timer completed
-            return;
-          }
-          setMinutes(minutes - 1);
-          setSeconds(59);
-        } else {
-          setSeconds(seconds - 1);
-        }
-      }, 1000);
-    }
+  useEffect(() => {
+    if (!ready || !key.current || mode !== 'focus') return;
+    try { localStorage.setItem(key.current, JSON.stringify(timer)); }
+    catch { setError('Browser storage is unavailable. Keep this page open until the session is saved.'); }
+  }, [timer, ready, mode]);
 
+  useEffect(() => {
+    if (timer.phase !== 'running' || timer.deadline === null) return;
+    const tick = () => setTimer(previous => {
+      const remaining = remainingSeconds(previous.deadline!);
+      return { ...previous, remaining, phase: remaining === 0 ? (mode === 'focus' ? 'pending' : 'saved') : 'running', outcome: remaining === 0 ? 'completed' : undefined };
+    });
+    tick();
+    const interval = setInterval(tick, 500);
     return () => clearInterval(interval);
-  }, [isActive, minutes, seconds]);
+  }, [timer.phase, timer.deadline, mode]);
 
-  const toggleTimer = () => {
-    setIsActive(!isActive);
+  const finish = async (outcome: 'completed' | 'abandoned') => {
+    if (!timer.id || saving.current) return;
+    saving.current = true; setBusy(true); setError('');
+    const remaining = timer.phase === 'running' ? remainingSeconds(timer.deadline!) : timer.remaining;
+    setTimer(previous => ({ ...previous, remaining, phase: 'pending', deadline: null, outcome }));
+    try {
+      const session = await insightsService.finishFocus(timer.id, outcome, timer.planned - remaining);
+      setTimer(previous => ({ ...previous, phase: 'saved', outcome: session.status === 'completed' ? 'completed' : 'abandoned' }));
+    } catch (failure) { setError(failure instanceof Error ? failure.message : 'Could not save this session. Please retry.'); }
+    finally { saving.current = false; setBusy(false); }
   };
+  useEffect(() => {
+    if (ready && timer.phase === 'pending' && timer.outcome === 'completed') void finish('completed');
+    // One automatic attempt; failed saves require the retry button.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ready, timer.phase]);
 
-  const resetTimer = () => {
-    setIsActive(false);
-    switch (selectedMode) {
-      case 'Pomodoro':
-        setMinutes(settings.pomodoro);
-        break;
-      case 'Short Break':
-        setMinutes(settings.shortBreak);
-        break;
-      case 'Long Break':
-        setMinutes(settings.longBreak);
-        break;
-    }
-    setSeconds(0);
+  const start = async () => {
+    setBusy(true); setError('');
+    try {
+      if (timer.phase === 'paused' || mode !== 'focus') {
+        setTimer(previous => ({ ...previous, phase: 'running', deadline: Date.now() + previous.remaining * 1000 }));
+      } else {
+        const id = timer.id || crypto.randomUUID();
+        setTimer(previous => ({ ...previous, id, phase: 'starting' }));
+        const session = await insightsService.startFocus(id, timer.planned);
+        if (session.status !== 'active') setTimer(previous => ({ ...previous, phase: 'saved' }));
+        else setTimer(previous => ({ ...previous, phase: 'running', deadline: Date.now() + previous.remaining * 1000 }));
+      }
+    } catch (failure) { setError(failure instanceof Error ? failure.message : 'Could not start the session.'); }
+    finally { setBusy(false); }
   };
-
-  const switchMode = (mode: 'Pomodoro' | 'Short Break' | 'Long Break') => {
-    setSelectedMode(mode);
-    setIsActive(false);
-    switch (mode) {
-      case 'Pomodoro':
-        setMinutes(settings.pomodoro);
-        break;
-      case 'Short Break':
-        setMinutes(settings.shortBreak);
-        break;
-      case 'Long Break':
-        setMinutes(settings.longBreak);
-        break;
-    }
-    setSeconds(0);
-  };
-
-  const updateSettings = (key: keyof TimerSettings, value: number) => {
-    setSettings(prev => ({
-      ...prev,
-      [key]: value
-    }));
-  };
-
-  const saveSettings = () => {
-    resetTimer();
-    setShowSettings(false);
-  };
-
-  return (
-    <div className="bg-white/80 backdrop-blur-sm rounded-3xl border border-violet-100 shadow-[0_0_50px_0_rgba(0,0,0,0.05)] p-12 transition-all duration-300 hover:shadow-[0_0_50px_0_rgba(0,0,0,0.08)]">
-      <div className="flex flex-col items-center justify-center space-y-10">
-        {/* Mode Selection */}
-        <div className="flex space-x-4 bg-violet-50/50 p-1.5 rounded-2xl">
-          {['Pomodoro', 'Short Break', 'Long Break'].map((mode) => (
-            <button
-              key={mode}
-              onClick={() => switchMode(mode as 'Pomodoro' | 'Short Break' | 'Long Break')}
-              className={`px-6 py-2.5 rounded-xl text-sm font-medium transition-all duration-300 ${
-                selectedMode === mode
-                  ? 'bg-violet-500 text-white shadow-sm'
-                  : 'text-violet-600 hover:bg-white hover:shadow-sm'
-              }`}
-            >
-              {mode}
-            </button>
-          ))}
-        </div>
-
-        {/* Timer Display */}
-        <div className="relative transform transition-transform duration-300 hover:scale-105">
-          <svg className="w-72 h-72">
-            <circle
-              className="text-violet-100"
-              strokeWidth="6"
-              stroke="currentColor"
-              fill="none"
-              r="130"
-              cx="144"
-              cy="144"
-            />
-            <circle
-              className="text-violet-500"
-              strokeWidth="6"
-              stroke="currentColor"
-              fill="none"
-              r="130"
-              cx="144"
-              cy="144"
-              style={{
-                strokeDasharray: 817,
-                strokeDashoffset: 817 * (1 - (minutes * 60 + seconds) / (settings.pomodoro * 60)),
-                strokeLinecap: 'round',
-                transform: 'rotate(-90deg)',
-                transformOrigin: '50% 50%',
-              }}
-            />
-          </svg>
-          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
-            <div className="text-6xl font-bold text-gray-900 tracking-tight">
-              {String(minutes).padStart(2, '0')}:{String(seconds).padStart(2, '0')}
-            </div>
-          </div>
-        </div>
-
-        {/* Controls */}
-        <div className="flex items-center space-x-6">
-          <button
-            onClick={toggleTimer}
-            className="p-4 rounded-2xl bg-violet-500 text-white hover:bg-violet-600 transition-all duration-300 hover:shadow-lg transform hover:-translate-y-0.5"
-          >
-            {isActive ? <Pause size={28} /> : <Play size={28} />}
-          </button>
-          <button
-            onClick={resetTimer}
-            className="p-4 rounded-2xl bg-violet-50 text-violet-600 hover:bg-violet-100 transition-all duration-300 hover:shadow-md transform hover:-translate-y-0.5"
-          >
-            <RotateCcw size={28} />
-          </button>
-          <button
-            onClick={() => setShowSettings(true)}
-            className="p-4 rounded-2xl bg-violet-50 text-violet-600 hover:bg-violet-100 transition-all duration-300 hover:shadow-md transform hover:-translate-y-0.5"
-          >
-            <Settings size={28} />
-          </button>
-        </div>
-
-        <div className="text-sm text-violet-600">
-          Focus on your task until the timer ends.
-        </div>
-      </div>
-
-      {/* Settings Modal */}
-      {showSettings && (
-        <div className="fixed inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center z-50">
-          <div className="bg-white rounded-2xl p-6 w-full max-w-md shadow-xl">
-            <h2 className="text-xl font-semibold mb-4">Timer Settings</h2>
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Pomodoro Duration (minutes)
-                </label>
-                <input
-                  type="number"
-                  value={settings.pomodoro}
-                  onChange={(e) => updateSettings('pomodoro', Math.max(1, parseInt(e.target.value)))}
-                  className="w-full px-4 py-2 rounded-xl border border-gray-200 focus:border-violet-500 focus:ring-1 focus:ring-violet-500"
-                  min="1"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Short Break Duration (minutes)
-                </label>
-                <input
-                  type="number"
-                  value={settings.shortBreak}
-                  onChange={(e) => updateSettings('shortBreak', Math.max(1, parseInt(e.target.value)))}
-                  className="w-full px-4 py-2 rounded-xl border border-gray-200 focus:border-violet-500 focus:ring-1 focus:ring-violet-500"
-                  min="1"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Long Break Duration (minutes)
-                </label>
-                <input
-                  type="number"
-                  value={settings.longBreak}
-                  onChange={(e) => updateSettings('longBreak', Math.max(1, parseInt(e.target.value)))}
-                  className="w-full px-4 py-2 rounded-xl border border-gray-200 focus:border-violet-500 focus:ring-1 focus:ring-violet-500"
-                  min="1"
-                />
-              </div>
-            </div>
-            <div className="mt-6 flex justify-end">
-              <button
-                onClick={saveSettings}
-                className="px-6 py-2.5 bg-violet-500 text-white rounded-xl hover:bg-violet-600 transition-all duration-300"
-              >
-                Save Changes
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+  const active = !['idle', 'saved'].includes(timer.phase);
+  const progress = (timer.planned - timer.remaining) / timer.planned * 100;
+  return <section className="rounded-3xl border border-stone-200 bg-white p-6 sm:p-10 shadow-sm" aria-labelledby="timer-title">
+    <div className="flex flex-wrap justify-center gap-2 mb-9">{(['focus', 'short', 'long'] as const).map(value => <button key={value} disabled={active || busy} onClick={() => { setMode(value); setError(''); setTimer(fresh(value === 'focus' ? duration : value === 'short' ? 5 : 15)); }} aria-pressed={mode === value} className={`rounded-full px-4 py-2 text-sm disabled:opacity-50 ${mode === value ? 'bg-violet-100 text-violet-800' : 'text-stone-500 hover:bg-stone-100'}`}>{value === 'focus' ? 'Focus' : value === 'short' ? 'Short break' : 'Long break'}</button>)}</div>
+    <div className="text-center"><p className="text-xs uppercase tracking-[.2em] text-stone-400">One thing at a time</p><h2 id="timer-title" className="text-xl mt-3 text-stone-800">{mode === 'focus' ? 'Make a little space to focus.' : 'Take a moment for yourself.'}</h2>
+      <div className="text-7xl sm:text-8xl font-light tracking-tight tabular-nums my-9 text-stone-800" role="timer" aria-label="Time remaining">{Math.floor(timer.remaining / 60).toString().padStart(2, '0')}:{(timer.remaining % 60).toString().padStart(2, '0')}</div>
+      <div className="h-1.5 rounded-full bg-stone-100 overflow-hidden max-w-xs mx-auto"><div className="h-full bg-violet-400" style={{ width: `${progress}%` }} /></div>
+      {timer.phase === 'saved' ? <div className="my-7"><p className="text-emerald-700 text-sm flex items-center justify-center gap-2"><Check size={16} />{mode !== 'focus' ? 'Break finished.' : timer.outcome === 'completed' ? 'Session saved. Well done for showing up.' : 'Time recorded. You can start fresh.'}</p><button onClick={() => setTimer(fresh(mode === 'focus' ? duration : mode === 'short' ? 5 : 15))} className="mt-4 text-sm text-violet-700 underline underline-offset-4">Start a new session</button></div> : <div className="flex flex-wrap justify-center gap-3 my-7">
+        {timer.phase === 'running' ? <button onClick={() => setTimer(previous => ({ ...previous, remaining: remainingSeconds(previous.deadline!), deadline: null, phase: 'paused' }))} className="inline-flex items-center gap-2 rounded-xl bg-violet-700 px-6 py-3 text-white"><Pause size={18} />Pause</button> : timer.phase === 'pending' ? <button disabled={busy} onClick={() => finish(timer.outcome || 'completed')} className="rounded-xl bg-violet-700 px-6 py-3 text-white disabled:opacity-50">{busy ? 'Saving…' : 'Retry save'}</button> : <button disabled={busy || !ready} onClick={start} className="inline-flex items-center gap-2 rounded-xl bg-violet-700 px-6 py-3 text-white disabled:opacity-50"><Play size={17} />{busy ? 'Starting…' : timer.phase === 'paused' ? 'Resume' : timer.phase === 'starting' ? 'Retry start' : 'Start session'}</button>}
+        {active && timer.phase !== 'pending' && timer.phase !== 'starting' && <button disabled={busy} onClick={() => mode === 'focus' ? finish('abandoned') : setTimer(fresh(mode === 'short' ? 5 : 15))} className="inline-flex items-center gap-2 rounded-xl border border-stone-200 px-4 py-3 text-sm text-stone-600"><RotateCcw size={15} />End early</button>}
+      </div>}
+      {error && <p role="alert" className="text-sm text-red-700 max-w-sm mx-auto mb-5">{error}</p>}
+      {mode === 'focus' && !active && <label className="text-sm text-stone-500 inline-flex gap-3 items-center">Focus duration<input aria-label="Focus duration in minutes" type="number" min={1} max={240} value={duration} onChange={event => { const value = Math.max(1, Math.min(240, Number(event.target.value) || 1)); setDuration(value); setTimer(fresh(value)); }} className="w-16 border border-stone-200 rounded-lg px-2 py-1 text-stone-800" />minutes</label>}
+      <p className="mt-6 text-xs text-stone-500 leading-relaxed flex justify-center gap-2"><Clock3 size={14} />Focus sessions save to your activity history. Breaks stay private to this timer.</p>
     </div>
-  );
-};
-
-export default PomodoroTimer;
+  </section>;
+}
