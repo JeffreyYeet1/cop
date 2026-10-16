@@ -39,6 +39,7 @@ export default function PomodoroTimer() {
   useEffect(() => {
     if (timer.phase !== 'running' || timer.deadline === null) return;
     const tick = () => setTimer(previous => {
+      if (previous.phase !== 'running' || previous.deadline === null) return previous;
       const remaining = remainingSeconds(previous.deadline!);
       return { ...previous, remaining, phase: remaining === 0 ? (mode === 'focus' ? 'pending' : 'saved') : 'running', outcome: remaining === 0 ? 'completed' : undefined };
     });

@@ -1,5 +1,7 @@
 "use client";
+import { apiUrl } from '../services/api';
 import React, { useEffect, useState } from 'react';
+import WorkspaceShell from '../components/WorkspaceShell';
 
 interface CalendarEvent {
   id: string;
@@ -22,7 +24,7 @@ interface Calendar {
   primary?: boolean;
 }
 
-export default function CalendarTest() {
+export default function GoogleCalendarPage() {
   const [calendars, setCalendars] = useState<Calendar[]>([]);
   const [selectedCalendar, setSelectedCalendar] = useState<string>("primary");
   const [events, setEvents] = useState<CalendarEvent[]>([]);
@@ -34,16 +36,16 @@ export default function CalendarTest() {
     try {
       setLoading(true);
       // First get the Google OAuth token
-      const tokenResponse = await fetch('http://localhost:8000/api/auth/token', {
+      const tokenResponse = await fetch(apiUrl('/auth/token'), {
         credentials: 'include',
       });
-      
+
       if (!tokenResponse.ok) {
         throw new Error('Failed to get Google token');
       }
-      
+
       const { access_token } = await tokenResponse.json();
-      
+
       // Then use it to call Google's API
       const response = await fetch('https://www.googleapis.com/calendar/v3/users/me/calendarList', {
         headers: {
@@ -71,19 +73,19 @@ export default function CalendarTest() {
     try {
       setLoading(true);
       // First get the Google OAuth token
-      const tokenResponse = await fetch('http://localhost:8000/api/auth/token', {
+      const tokenResponse = await fetch(apiUrl('/auth/token'), {
         credentials: 'include',
       });
-      
+
       if (!tokenResponse.ok) {
         throw new Error('Failed to get Google token');
       }
-      
+
       const { access_token } = await tokenResponse.json();
-      
+
       const now = new Date();
       const oneMonthFromNow = new Date(now.getFullYear(), now.getMonth() + 1, now.getDate());
-      
+
       // Then use it to call Google's API directly
       const response = await fetch(`https://www.googleapis.com/calendar/v3/calendars/${calendarId}/events?timeMin=${now.toISOString()}&timeMax=${oneMonthFromNow.toISOString()}`, {
         headers: {
@@ -111,22 +113,22 @@ export default function CalendarTest() {
     try {
       setLoading(true);
       // First get the Google OAuth token
-      const tokenResponse = await fetch('http://localhost:8000/api/auth/token', {
+      const tokenResponse = await fetch(apiUrl('/auth/token'), {
         credentials: 'include',
       });
-      
+
       if (!tokenResponse.ok) {
         throw new Error('Failed to get Google token');
       }
-      
+
       const { access_token } = await tokenResponse.json();
 
       const now = new Date();
       const oneHourFromNow = new Date(now.getTime() + 60 * 60 * 1000);
 
       const eventData = {
-        summary: 'Test Event',
-        description: 'This is a test event created from the calendar test page',
+        summary: 'Focus time',
+        description: 'Time set aside with Clash of Plans.',
         start: {
           dateTime: now.toISOString(),
           timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
@@ -153,7 +155,7 @@ export default function CalendarTest() {
 
       const data = await response.json();
       console.log('Created event:', data);
-      
+
       // Refresh events list
       await fetchEvents(selectedCalendar);
     } catch (err) {
@@ -169,14 +171,14 @@ export default function CalendarTest() {
     try {
       setLoading(true);
       // First get the Google OAuth token
-      const tokenResponse = await fetch('http://localhost:8000/api/auth/token', {
+      const tokenResponse = await fetch(apiUrl('/auth/token'), {
         credentials: 'include',
       });
-      
+
       if (!tokenResponse.ok) {
         throw new Error('Failed to get Google token');
       }
-      
+
       const { access_token } = await tokenResponse.json();
 
       // Then use it to call Google's API directly
@@ -214,9 +216,9 @@ export default function CalendarTest() {
   }, [selectedCalendar]);
 
   return (
-    <div className="p-8">
-      <h1 className="text-2xl font-bold mb-6">Calendar Test Page</h1>
-      
+    <WorkspaceShell><div className="max-w-4xl rounded-2xl border border-stone-200 bg-white p-6 sm:p-8">
+      <h1 className="text-2xl font-bold mb-6">Google Calendar</h1>
+
       {error && (
         <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
           {error}
@@ -226,7 +228,7 @@ export default function CalendarTest() {
       {/* Calendars Section */}
       <div className="mb-8">
         <h2 className="text-xl font-semibold mb-4">Your Calendars</h2>
-        <select 
+        <select
           value={selectedCalendar}
           onChange={(e) => setSelectedCalendar(e.target.value)}
           className="border rounded p-2 mb-4"
@@ -246,7 +248,7 @@ export default function CalendarTest() {
         disabled={loading}
         className="bg-blue-500 text-white px-4 py-2 rounded mb-6 hover:bg-blue-600 disabled:bg-blue-300"
       >
-        Create Test Event
+        Create a one-hour event
       </button>
 
       {/* Events Section */}
@@ -283,6 +285,6 @@ export default function CalendarTest() {
           </div>
         )}
       </div>
-    </div>
+    </div></WorkspaceShell>
   );
-} 
+}
