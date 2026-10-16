@@ -1,6 +1,7 @@
 import { Task } from '../types';
+import { api } from './api';
 
-const API_BASE_URL = 'http://localhost:8000/api';
+const API_BASE_URL = `${(process.env.NEXT_PUBLIC_API_URL || '').replace(/\/$/, '')}/api`;
 
 const getAuthHeader = () => {
   const token = localStorage.getItem('token');
@@ -14,10 +15,11 @@ const getAuthHeader = () => {
 };
 
 export const todoService = {
+  setCompletion: (id: number, completed: boolean) => api<Task>(`/todo/${id}/completion`, { method: 'PATCH', body: JSON.stringify({ completed }) }),
   // Get all todos
   getAllTodos: async (): Promise<Task[]> => {
     try {
-      const response = await fetch(`${API_BASE_URL}/todo`, {
+      const response = await fetch(`${API_BASE_URL}/todo/`, {
         headers: getAuthHeader()
       });
       if (!response.ok) {
@@ -55,7 +57,7 @@ export const todoService = {
   // Create a new todo
   createTodo: async (todo: Omit<Task, 'id' | 'user_id' | 'created_at'>): Promise<Task> => {
     try {
-      const response = await fetch(`${API_BASE_URL}/todo`, {
+      const response = await fetch(`${API_BASE_URL}/todo/`, {
         method: 'POST',
         headers: getAuthHeader(),
         body: JSON.stringify(todo),

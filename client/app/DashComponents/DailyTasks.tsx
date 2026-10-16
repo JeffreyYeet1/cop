@@ -163,6 +163,8 @@ const DailyTasks = () => {
     };
 
     fetchTodos();
+    window.addEventListener('taskUpdated', fetchTodos);
+    return () => window.removeEventListener('taskUpdated', fetchTodos);
   }, []);
 
   const handleAddTodo = async (taskData: { title: string; description: string; priority: Priority; estimated_duration: number }) => {
@@ -317,6 +319,7 @@ const DailyTasks = () => {
               <TaskCard
                 key={todo.id}
                 id={todo.id}
+                completed_at={todo.completed_at}
                 title={todo.title}
                 description={todo.description}
                 time={`${todo.estimated_duration}min`}

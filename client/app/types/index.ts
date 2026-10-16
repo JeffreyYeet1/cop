@@ -10,6 +10,7 @@ export interface Task {
   priority: Priority;
   estimated_duration?: number;
   created_at: string;
+  completed_at?: string | null;
   progress?: TaskProgress;
 }
 

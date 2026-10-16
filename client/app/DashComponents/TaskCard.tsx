@@ -46,6 +46,7 @@ interface TaskCardProps {
   description?: string;
   time?: string;
   priority: Priority;
+  completed_at?: string | null;
   onDelete: () => void;
   onUpdate: (updatedTodo: Task) => void;
   onDragStart?: (e: React.DragEvent<HTMLDivElement>, id: number) => void;
@@ -61,6 +62,7 @@ const TaskCard: React.FC<TaskCardProps> = ({
   description,
   time,
   priority,
+  completed_at,
   onDelete,
   onUpdate,
   onDragStart,
@@ -69,7 +71,9 @@ const TaskCard: React.FC<TaskCardProps> = ({
   style,
 }) => {
   const [isEditing, setIsEditing] = useState(false);
-  const [isCompleted, setIsCompleted] = useState(false);
+  const isCompleted = !!completed_at;
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState('');
   const [editedTitle, setEditedTitle] = useState(title);
   const [editedDescription, setEditedDescription] = useState(description || '');
   const [editedPriority, setEditedPriority] = useState(priority);
@@ -77,8 +81,12 @@ const TaskCard: React.FC<TaskCardProps> = ({
 
   const priorityColors = getPriorityColor(priority);
 
-  const handleToggleComplete = () => {
-    setIsCompleted(!isCompleted);
+  const handleToggleComplete = async () => {
+    setSaving(true);
+    setSaveError('');
+    try { onUpdate(await todoService.setCompletion(id, !isCompleted)); }
+    catch (error) { setSaveError(error instanceof Error ? error.message : 'Could not save completion.'); }
+    finally { setSaving(false); }
   };
 
   const handleUpdate = async () => {
@@ -129,6 +137,7 @@ const TaskCard: React.FC<TaskCardProps> = ({
         ...style
       }}
     >
+      {saveError && <p role="alert" className="text-sm text-red-700 mb-3">{saveError}</p>}
       {isEditing ? (
         <div className="space-y-3">
           <input
@@ -174,6 +183,9 @@ const TaskCard: React.FC<TaskCardProps> = ({
             <div className="flex items-center gap-2">
               <button
                 onClick={handleToggleComplete}
+                disabled={saving}
+                aria-label={isCompleted ? `Reopen ${title}` : `Complete ${title}`}
+                aria-pressed={isCompleted}
                 className={`w-5 h-5 rounded-full border flex items-center justify-center transition-all duration-300 transform hover:scale-110 ${
                   isCompleted 
                     ? 'bg-blue-500 border-blue-500 scale-105' 
@@ -198,12 +210,14 @@ const TaskCard: React.FC<TaskCardProps> = ({
                 </span>
               )}
               <button
+                aria-label={`Edit ${title}`}
                 onClick={() => setIsEditing(true)}
                 className="text-gray-400 hover:text-blue-500 transition-all duration-300 p-1.5 hover:bg-blue-50 rounded-lg transform hover:scale-110"
               >
                 <Pencil size={16} />
               </button>
               <button
+                aria-label={`Delete ${title}`}
                 onClick={onDelete}
                 className="text-gray-400 hover:text-red-500 transition-all duration-300 p-1.5 hover:bg-red-50 rounded-lg transform hover:scale-110"
               >
