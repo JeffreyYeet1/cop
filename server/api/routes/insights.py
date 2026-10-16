@@ -64,3 +64,14 @@ async def finish_focus(session_id: UUID, body: FocusFinish, user: User = Depends
     if existing:
         return existing
     return await run_in_threadpool(store.finish_session, user.id, session_id, body.status, body.actual_seconds)
+
+
+def get_review_builder():
+    from services.weekly_review import build_review
+    return build_review
+
+
+@router.post('/review')
+async def weekly_review(timezone: str = Query(default='UTC', max_length=100), user: User = Depends(get_current_user), store=Depends(get_store), build=Depends(get_review_builder)):
+    summary = await summary_for(user.id, timezone, store)
+    return await build(summary)
