@@ -14,4 +14,6 @@ cryptography==44.0.2
 google-auth-oauthlib==1.2.0
 google-auth-httplib2==0.2.0
 google-api-python-client==2.121.0
-itsdangerous==2.1.2 
+itsdangerous==2.1.2
+# Explicit HTTP dependency for the Cohere v2 RAG path; compatible with Supabase 1.2.
+httpx==0.24.1

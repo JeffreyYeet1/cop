@@ -1,110 +1,85 @@
 # Architecture and AI, explained
 
-Clash of Plans is a student planning prototype built for GenAI Genesis 2025. Its engineering story is the connection between a typed React interface, authenticated API endpoints, database-backed tasks, and language-model assistance.
+Clash of Plans connects a typed React interface, authenticated API endpoints, database-backed tasks, and language-model assistance. It includes a lightweight task RAG pipeline and a local MCP server alongside the original Peka assistant.
 
-## The implemented system
+## System overview
 
 ```mermaid
-flowchart TD
-    Browser[Next.js interface] -->|Bearer JWT| API[FastAPI routes]
-    API --> Auth[Authentication dependency]
-    API --> Todo[Task service and repository]
-    Todo --> DB[(Supabase)]
-    API --> Peka[PekaService]
-    Peka --> Intent[Cohere intent classification]
-    Intent --> Extract[Cohere task extraction]
-    Extract --> Validate[Task field normalization and TodoCreate]
-    Validate --> Todo
-    Peka --> Chain[LangChain prompt → ChatCohere → Pydantic parser]
-    API --> Calendar[Google Calendar service]
-    Calendar --> Google[Google Calendar API]
+flowchart LR
+    UI[Next.js interface] --> API[FastAPI / authentication]
+    MCP[MCP stdio adapter] -->|User bearer token| API
+    API --> DB[(Supabase tasks)]
+    API --> Retrieve[Owned tasks / BM25 retrieval]
+    Retrieve --> Context[Bounded task context]
+    Context --> Generate[Cohere v2 Chat]
+    Generate --> Validate[Validate answer and task references]
+    API --> Peka[Original Peka / LangChain chains]
+    API --> Calendar[Google Calendar API]
 ```
 
-The dashboard calendar is a separate frontend interaction using component state. The Google Calendar page and backend service demonstrate direct integration; automatic bidirectional synchronization between the two is not implemented.
+## Retrieval-augmented generation
 
-### Task creation through Peka
+RAG retrieves relevant records at request time, then uses that evidence as context for generation. This implementation uses keyword retrieval over saved tasks, so it needs no embedding service or vector database.
 
-1. The command palette sends a query and bearer token to `POST /api/peka/query`.
-2. `get_current_user` authenticates the caller.
-3. `PekaService` uses Cohere to classify intent. For task requests, another generation call extracts a title, description, priority, and estimated duration.
-4. The service parses JSON, normalizes priority, and clamps duration to 1–1,440 minutes. This is application parsing, not a provider-enforced structured-output guarantee.
-5. The route creates a `TodoCreate` model and writes the record through the task service under the authenticated user's ID.
-6. The frontend dispatches a task-update event so the interface can refresh.
+### Request flow
 
-The constructor also makes a connection-test generation request. A single query can therefore involve several model calls. The source comments that describe a single call do not reflect the full path.
+1. A caller sends a question to `POST /api/rag/ask` with the existing application bearer token.
+2. The authentication dependency resolves the user. The API does not accept a user ID as an authorization input.
+3. `TaskRAGService` loads that user's tasks through the existing service and repository. `retrieve_tasks` filters ownership again before ranking.
+4. BM25 ranks task titles, descriptions, and priorities by query-term relevance. Generic questions such as “what should I do next” can fall back to priority ordering. Unrelated queries return no matches.
+5. Up to ten records are projected into a small context: task ID, title, description, priority, and estimated duration. Text lengths are bounded, and unrelated database columns are excluded.
+6. The service calls Cohere's v2 Chat API with JSON output enabled. The system prompt treats task text as untrusted data and asks the model to use only those records.
+7. Pydantic validates the answer structure. The service requires task references and rejects references outside the retrieved set. The response includes the answer, suggested action items, and cited source records.
+8. If no tasks match, the service returns a helpful no-match response without calling the model.
 
-### Recommendations through LangChain
+`POST /api/rag/search` performs steps 1–5 only. It returns retrieved context without generation or a Cohere key.
 
-`POST /api/peka/analyze` accepts a list of task objects. The service serializes those tasks into the prompt, asking the model to consider priority, duration, task age, and progress.
+The database is queried on each request, so edits and deletions need no separate index refresh. This first version scans the user's tasks in memory after the existing owner-filtered database query; database-side search is the next scaling step. Keyword search does not provide synonym understanding or semantic similarity.
 
-The chain in `server/services/peka_service.py` is:
+Validated source IDs prevent references to records outside the retrieved set. They do not prove that every sentence is supported by those records; answer faithfulness still needs evaluation.
+
+## Model Context Protocol
+
+The adapter in `integrations/mcp/server.py` uses the official MCP Python SDK and the standard stdio transport. A compatible client launches it as a local subprocess and discovers tools through the protocol.
+
+| Tool | Calls | Purpose |
+| --- | --- | --- |
+| `list_tasks` | `GET /api/todo/` | List the configured user's tasks |
+| `search_tasks` | `POST /api/rag/search` | Retrieve relevant task context without generation |
+| `ask_tasks` | `POST /api/rag/ask` | Retrieve context and generate a source-linked answer |
+
+All tools are read-only. Their schemas contain queries and limits, never tokens or user IDs. The process reads a user token from `COP_API_TOKEN` and sends it to the existing API, which enforces authentication and user scoping. Expired tokens require a fresh login. The adapter has no direct database credentials or access.
+
+This is a per-user local stdio integration, not a hosted multi-user MCP service. It does not open an HTTP listener or implement a new OAuth authorization server. Remote API URLs must use HTTPS; HTTP is allowed only for loopback development. Redirects are disabled so the adapter does not forward a token to a redirected host. Provider/API errors are returned as sanitized tool failures.
+
+The MCP environment is separate because the official SDK uses newer HTTP dependencies than the original backend. This avoids forcing an unrelated migration of the hackathon's Supabase and LangChain packages.
+
+## Original Peka assistant
+
+The app's existing command palette continues to call `/api/peka/query`. It uses Cohere intent classification and task extraction, then persists created tasks under the authenticated user's ID. Task-analysis and general-response chains use:
 
 ```text
-ChatPromptTemplate → ChatCohere → PydanticOutputParser(PekaResponse)
+ChatPromptTemplate → ChatCohere → PydanticOutputParser
 ```
 
-Its expected output includes ordered task IDs, a top recommendation with a reason, and an explanation. General productivity questions use a similar chain with a different response model.
+The new RAG tools are available through `/api/rag/*` and MCP. The existing command palette has not been redesigned or switched to the new endpoints. Its unified analyze branch still needs its missing task-context lookup completed; the separate `/api/peka/analyze` route accepts task objects explicitly.
 
-The separate analysis route is implemented, but it accepts client-supplied task context and does not independently verify ownership of every supplied task. The unified query's analyze branch calls a missing `get_user_tasks()` method and falls back to an error message. These are next steps, not completed capabilities.
+## How the pieces relate
 
-## RAG: retrieving evidence before generating an answer
+| Component | Contribution |
+| --- | --- |
+| Cohere | Model inference for the original assistant and new RAG answers |
+| LangChain | Original prompt/model/parser composition |
+| Task RAG | Query-driven retrieval and generation over authenticated saved tasks |
+| MCP | Standard tool discovery and invocation for compatible local AI clients |
+| Supabase | Task, user, and onboarding-preference persistence |
 
-**Retrieval-augmented generation (RAG)** gives a model relevant information found at request time, then asks it to answer using that context. Retrieval can use keyword, SQL, semantic, or hybrid search; a vector database is one option, not a requirement. See [LangChain's explanation of retrieval](https://www.langchain.com/blog/retrieval).
+RAG determines which task information reaches the model. MCP lets an external AI client access retrieval and answering through discoverable tools. The browser app and MCP adapter share the same API boundary.
 
-The current app supplies task objects directly in a prompt. It does not implement query-driven retrieval, document ingestion, embeddings, or a searchable knowledge index. Supabase persistence and LangChain imports alone do not establish RAG. Although the original Devpost narrative mentions RAG, this checkout does not contain a retrieval pipeline.
+## Validation and limits
 
-### A useful future extension
+The automated suite checks retrieval ranking, owner filtering, empty results, bounded context, malformed model output, unknown citations, endpoint authentication, tool argument validation, sanitized errors, and real stdio initialization/discovery. Model responses and API data are mocked for deterministic tests; live Supabase and Cohere calls require configured accounts and are separate verification.
 
-Imagine asking: “What should I work on before my algorithms exam?” A RAG extension could:
+The dashboard's drag-and-drop calendar uses component state. Google Calendar is a separate direct integration; automatic bidirectional synchronization is a future step. Database migrations, production authentication/logging hardening, focus-history completion, and broader AI evaluation also remain on the roadmap.
 
-1. Retrieve only the current user's relevant tasks, lecture notes, and deadlines.
-2. Rank the retrieved context and fit it within the model's context budget.
-3. Ask the model for a suggested plan with references to the retrieved items.
-4. Validate cited IDs and ownership before returning the answer.
-5. Evaluate retrieval relevance and whether recommendations are supported by the retrieved evidence.
-
-A first iteration could use filtered SQL or keyword retrieval. Add embeddings only if semantic search improves a measured use case. Keep indexed records scoped to their owner, propagate edits and deletions, and treat retrieved text as untrusted data.
-
-This is a proposed design. No RAG endpoint is shipped here.
-
-## MCP: a common interface for AI tools
-
-**Model Context Protocol (MCP)** standardizes how AI applications discover and use external tools and context. An MCP server can expose tools, resources, and prompts to compatible clients. See the [official server overview](https://modelcontextprotocol.io/specification/draft/server/index).
-
-The current application uses regular HTTP endpoints, Cohere SDK calls, and Google's API. It contains no MCP server, client, tool registry, or protocol transport.
-
-A future MCP adapter could wrap existing services with deliberately small operations:
-
-| Proposed tool | Responsibility | Boundary |
-| --- | --- | --- |
-| `list_tasks` | Read the caller's task records | Enforce user identity and scoped access |
-| `create_task` | Create a validated task | Require explicit user intent; reject invalid fields |
-| `list_calendar_events` | Read an authorized calendar | Use the caller's Google permissions |
-| `propose_time_block` | Return a suggested interval | Preview first; do not silently create an event |
-
-The adapter would reuse service-layer business logic. It would need per-client authentication, permission checks, tool schemas, auditability, and deliberate confirmation for writes. Wrapping a REST route does not by itself supply those boundaries.
-
-### How the concepts relate
-
-| Concept | What it contributes | Status here |
-| --- | --- | --- |
-| Cohere | Model inference | Implemented through legacy SDK interfaces |
-| LangChain | Prompt/model/parser composition | Implemented for analysis and general replies |
-| Prompt context | Task data supplied to the model | Implemented in the explicit analysis endpoint |
-| RAG | Query-driven retrieval of relevant evidence | Proposed |
-| MCP | A standardized tool/context integration layer | Proposed |
-
-RAG answers “what information should the model see?” MCP answers “how can an AI application access tools and context?” They can work together, but neither requires the other.
-
-## Tradeoffs and next steps
-
-The hackathon favored an end-to-end prototype over production infrastructure. A realistic improvement sequence is:
-
-1. **Reproducible setup:** database migrations, documented policies, a single API URL configuration, and removal of duplicate configuration files.
-2. **Reliable AI paths:** current model interfaces, injected clients, fewer calls, strict output validation, explicit errors, and authenticated task-context lookup.
-3. **Data consistency:** persisted dashboard calendar state, intentional Google synchronization, and working focus-session history endpoints.
-4. **Deployment boundaries:** restrict CORS, configure secure cookies, review browser token storage, stop logging request headers and sensitive payloads, and validate authorization across every operation.
-5. **Evidence:** extraction/analysis evaluations, integration tests with isolated data, and a student usability study before making impact claims.
-6. **Extensions:** introduce RAG or MCP only after choosing and evaluating a concrete user workflow.
-
-The public landing page can be viewed without these services. Authenticated application features require a configured backend. The original landing page includes broad scheduling and productivity claims; the implementation status documented here is the more precise guide to current capabilities.
+See [setup and examples](rag-mcp.md), [research behind the product](research.md), [Cohere's Chat API](https://docs.cohere.com/reference/chat), and the [official MCP Python SDK](https://github.com/modelcontextprotocol/python-sdk/tree/v1.26.0).

@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.middleware.sessions import SessionMiddleware
-from api.routes import auth, users, onboarding, todo, peka, calendar
+from api.routes import auth, users, onboarding, todo, peka, calendar, rag
 import logging
 from dotenv import load_dotenv
 import os
@@ -43,13 +43,15 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+app.include_router(rag.router, prefix="/api/rag")
+
 # Add request logging middleware
 @app.middleware("http")
 async def log_requests(request, call_next):
     logger.info("=== New Request ===")
     logger.debug(f"Method: {request.method}")
     logger.debug(f"URL: {request.url}")
-    logger.debug(f"Headers: {dict(request.headers)}")
+    logger.debug("Request received (credentials omitted)")
     
     try:
         response = await call_next(request)
