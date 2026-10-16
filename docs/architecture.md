@@ -11,7 +11,7 @@ flowchart LR
     API --> DB[(Supabase tasks)]
     API --> Retrieve[Owned tasks / BM25 retrieval]
     Retrieve --> Context[Bounded task context]
-    Context --> Generate[Cohere v2 Chat]
+    Context --> Generate[Configured JSON model]
     Generate --> Validate[Validate answer and task references]
     API --> Peka[Original Peka / LangChain chains]
     API --> Calendar[Google Calendar API]
@@ -28,7 +28,7 @@ RAG retrieves relevant records at request time, then uses that evidence as conte
 3. `TaskRAGService` loads that user's tasks through the existing service and repository. `retrieve_tasks` filters ownership again before ranking.
 4. BM25 ranks task titles, descriptions, and priorities by query-term relevance. Generic questions such as “what should I do next” can fall back to priority ordering. Unrelated queries return no matches.
 5. Up to ten records are projected into a small context: task ID, title, description, priority, and estimated duration. Text lengths are bounded, and unrelated database columns are excluded.
-6. The service calls Cohere's v2 Chat API with JSON output enabled. The system prompt treats task text as untrusted data and asks the model to use only those records.
+6. The service calls the configured JSON-capable provider with JSON output enabled. The system prompt treats task text as untrusted data and asks the model to use only those records.
 7. Pydantic validates the answer structure. The service requires task references and rejects references outside the retrieved set. The response includes the answer, suggested action items, and cited source records.
 8. If no tasks match, the service returns a helpful no-match response without calling the model.
 
@@ -56,13 +56,13 @@ The MCP environment is separate because the official SDK uses newer HTTP depende
 
 ## Original Peka assistant
 
-The app's existing command palette continues to call `/api/peka/query`. It uses Cohere intent classification and task extraction, then persists created tasks under the authenticated user's ID. Task-analysis and general-response chains use:
+The legacy command palette calls `/api/peka/query`. It uses Cohere intent classification and task extraction, then persists created tasks under the authenticated user's ID. Task-analysis and general-response chains use:
 
 ```text
 ChatPromptTemplate → ChatCohere → PydanticOutputParser
 ```
 
-The new RAG tools are available through `/api/rag/*` and MCP. The existing command palette has not been redesigned or switched to the new endpoints. Its unified analyze branch still needs its missing task-context lookup completed; the separate `/api/peka/analyze` route accepts task objects explicitly.
+The dashboard now uses `/api/rag/ask` through a visible Peka panel and shows retrieved sources. The original command-palette component remains in the repository as a legacy integration. Its unified analyze branch still needs its missing task-context lookup completed; the separate `/api/peka/analyze` route accepts task objects explicitly.
 
 ## How the pieces relate
 
@@ -80,6 +80,15 @@ RAG determines which task information reaches the model. MCP lets an external AI
 
 The automated suite checks retrieval ranking, owner filtering, empty results, bounded context, malformed model output, unknown citations, endpoint authentication, tool argument validation, sanitized errors, and real stdio initialization/discovery. Model responses and API data are mocked for deterministic tests; live Supabase and Cohere calls require configured accounts and are separate verification.
 
-The dashboard's drag-and-drop calendar uses component state. Google Calendar is a separate direct integration; automatic bidirectional synchronization is a future step. Database migrations, production authentication/logging hardening, focus-history completion, and broader AI evaluation also remain on the roadmap.
+The dashboard’s drag-and-drop calendar persists per account and date on the same browser. Google Calendar is a separate direct integration; automatic bidirectional synchronization is a future step. Database migrations, production authentication/logging hardening, baseline schema provisioning, and broader AI evaluation also remain on the roadmap.
 
 See [setup and examples](rag-mcp.md), [research behind the product](research.md), [Cohere's Chat API](https://docs.cohere.com/reference/chat), and the [official MCP Python SDK](https://github.com/modelcontextprotocol/python-sdk/tree/v1.26.0).
+
+
+## HEART and weekly reflection
+
+The [HEART mapping](heart.md) covers personal Happiness, Engagement, Adoption, Retention, and Task success signals. Task transitions are recorded by database triggers; focus-session and check-in endpoints use the authenticated owner. `services/heart.py` calculates timezone-aware windows and metrics without a model. Missing ratings and absent comparison periods remain unknown.
+
+The optional weekly reflection receives only computed aggregate evidence. It returns observations with validated evidence IDs and one suggested experiment. It does not invent metric values or replace the calculation layer; factual faithfulness still requires evaluation. Sparse activity returns a getting-started suggestion without inference.
+
+RAG and reflections share [the provider adapter](ai-providers.md). Cohere, OpenAI, and compatible JSON-capable local or hosted endpoints are selected through server environment variables. There is no automatic fallback to another provider.

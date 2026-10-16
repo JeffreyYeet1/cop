@@ -11,7 +11,7 @@ Start the configured backend using the [README](../README.md). The new endpoints
 
 Questions must contain 1–2,000 characters. Limits range from 1 to 10. The API derives ownership from the caller's token, not the request body. Use a title or subject for keyword search, or a broad planning question such as “what should I do next” for priority-based selection.
 
-Generation uses `COHERE_API_KEY` and defaults to `COHERE_RAG_MODEL=command-a-03-2025`. Set the model to one available in your Cohere account that supports v2 Chat JSON output. The new path does not use the original assistant's legacy `generate` interface. No-match answers and search work without a model key.
+Generation uses the [configurable AI adapter](ai-providers.md). The default Cohere configuration remains compatible with `COHERE_API_KEY` and `COHERE_RAG_MODEL`; OpenAI and compatible JSON-capable servers are also supported. The new path does not use the original assistant's legacy `generate` interface. No-match answers and search work without a model key.
 
 Example request in a shell where `COP_API_TOKEN` already contains your app token:
 
@@ -77,4 +77,4 @@ python3 -m venv /tmp/cop-checks
 /tmp/cop-checks/bin/python -m unittest discover -s server/tests -v
 ```
 
-The suite uses fake user/task data and mocked HTTP model responses, plus a real MCP subprocess for initialization and discovery. It never calls paid model inference or your production database. Live generation still requires a configured backend, a valid user token, saved matching tasks, and Cohere model access.
+The suite uses fake user/task data and mocked HTTP model responses, plus a real MCP subprocess for initialization and discovery. It never calls paid model inference or your production database. Live generation still requires a configured backend, a valid user token, saved matching tasks, and access to the configured model.

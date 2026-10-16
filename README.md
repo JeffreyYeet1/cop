@@ -4,7 +4,7 @@
 
 A student productivity workspace that brings task management, visual scheduling, and an AI assistant into one flow. Built collaboratively for **GenAI Genesis 2025**.
 
-[Project story on Devpost](https://devpost.com/software/clash-of-plans) · [Architecture & AI explained](docs/architecture.md) · [Research behind the design](docs/research.md)
+[Project story on Devpost](https://devpost.com/software/clash-of-plans) · [Architecture & AI explained](docs/architecture.md) · [Research behind the design](docs/research.md) · [HEART measurement](docs/heart.md) · [AI providers](docs/ai-providers.md)
 
 ## Why we built it
 
@@ -19,11 +19,13 @@ Our purpose is to make planning feel lighter, so students can spend less energy 
 | Experience | What to look for |
 | --- | --- |
 | Tasks | Create, edit, and delete tasks with priorities and duration estimates. Authenticated task records are stored in Supabase. |
-| Visual planning | Drag tasks into the dashboard calendar and move events between time slots. Dashboard calendar state is local to the component; this is distinct from the Google Calendar integration. |
+| Visual planning | Drag tasks into the dashboard calendar and move events between time slots. Day plans persist per account and local date on the same browser; this is distinct from the Google Calendar integration. |
 | Peka | Natural-language task creation, general productivity questions, and a separate task-analysis endpoint. |
 | Task RAG | Authenticated keyword search and source-linked answers over saved tasks through `/api/rag/search` and `/api/rag/ask`. |
 | MCP | A local stdio server exposing three read-only task tools to compatible AI clients. |
-| Focus | Configurable Pomodoro, short-break, and long-break timers. |
+| Focus | Configurable timers with pause/resume, account-scoped browser recovery, durable session records, and retryable saves. |
+| HEART insights | Personal clarity check-ins, active days, adoption milestones, return indicators, focus completion, and seven-day activity charts. |
+| Weekly reflection | Optional AI observations grounded in computed metrics, with evidence references and one suggested experiment. |
 | Google Calendar | OAuth and calendar API integration code for listing, creating, updating, and deleting events. Requires Google configuration. |
 
 ## Research behind the idea
@@ -60,7 +62,7 @@ flowchart LR
 
 ### Task RAG and MCP
 
-The task assistant includes a lightweight **retrieval-augmented generation (RAG)** pipeline. It retrieves the signed-in user's relevant saved tasks with BM25 keyword ranking, supplies bounded task context to Cohere's v2 Chat API, and returns an answer with validated task references. Search needs no model call, vector database, or embeddings.
+The task assistant includes a lightweight **retrieval-augmented generation (RAG)** pipeline. It retrieves the signed-in user's relevant saved tasks with BM25 keyword ranking, supplies bounded task context to the configured model provider, and returns an answer with validated task references. Search needs no model call, vector database, or embeddings.
 
 An accompanying **Model Context Protocol (MCP)** server exposes `list_tasks`, `search_tasks`, and `ask_tasks` over local stdio. Compatible AI clients can discover these tools and use the same authenticated API. The adapter has its own small environment and keeps credentials out of tool arguments.
 
@@ -81,11 +83,12 @@ Open [localhost:3000](http://localhost:3000).
 
 ## Run the backend-connected app
 
-The full app also requires Python 3.11+, a configured Supabase project, and a Cohere account. Google OAuth/Calendar needs its own credentials and consent configuration.
+The full app also requires Python 3.11+ and a configured Supabase project. AI features support Cohere, OpenAI, or a JSON-capable OpenAI-compatible endpoint, including local model servers. See [AI configuration](docs/ai-providers.md). Google OAuth/Calendar needs its own credentials and consent configuration.
 
 1. Create `server/.env` with your own `SUPABASE_URL`, `SUPABASE_API_KEY`, `COHERE_API_KEY`, `SECRET_KEY`, and `SESSION_SECRET_KEY`. Use separate random signing/session secrets. For Google features, also set `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` on the server, and `NEXT_PUBLIC_GOOGLE_CLIENT_ID` in `client/.env.local`. Keep private keys out of client variables and version control.
 2. Provision the database tables expected by the code: `users`, `todo`, and `user_preferences`. This hackathon repository does not yet include a complete database migration or policy setup; environment variables alone are not sufficient to provision the full app. The models and repositories under `server/` document the expected fields.
-3. Start the API in a separate terminal:
+3. Apply [`server/migrations/001_heart_activity.sql`](server/migrations/001_heart_activity.sql) to the existing Supabase database for completion, focus, and HEART features. Use a **server-only service_role key** as `SUPABASE_API_KEY`; new activity tables deliberately deny direct browser access. The migration has been checked against temporary local PostgreSQL, but must be applied to your own project.
+4. Start the API in a separate terminal:
 
    ```sh
    cd server
@@ -95,7 +98,7 @@ The full app also requires Python 3.11+, a configured Supabase project, and a Co
    uvicorn main:app --reload --port 8000
    ```
 
-4. Start the client as above. API documentation is at [localhost:8000/docs](http://localhost:8000/docs).
+5. Start the client as above. API documentation is at [localhost:8000/docs](http://localhost:8000/docs).
 
 Alternatively, with Docker and Compose installed and `server/.env` configured:
 
@@ -103,9 +106,9 @@ Alternatively, with Docker and Compose installed and `server/.env` configured:
 docker compose up --build
 ```
 
-The client listens on port 3000 and the API on port 8000. Many app requests target `localhost:8000` directly; deployment to another host requires an API URL configuration pass.
+The client listens on port 3000 and the API on port 8000. Browser requests use the same-origin API proxy by default. Set `API_PROXY_URL` on the Next.js server to change the backend origin (for Docker Compose, this is `http://server:8000`). `NEXT_PUBLIC_API_URL` can instead select an explicit browser-visible backend origin.
 
-The original Peka creation/analysis paths use the pinned 2025 Cohere/LangChain packages and legacy `generate` / `command` interfaces. The new task RAG endpoints use the Cohere v2 Chat API directly, with the model configurable through `COHERE_RAG_MODEL`. Live AI use requires an account with access to the selected model.
+The original Peka creation/analysis paths use the pinned 2025 Cohere/LangChain packages and legacy `generate` / `command` interfaces. The RAG and weekly-reflection pipeline uses a shared configurable JSON-generation adapter; the default Cohere path uses v2 Chat. Live AI use requires an account with access to the selected model.
 
 ## Project map
 
@@ -116,7 +119,11 @@ client/app/components/             Authentication UI and Peka command palette
 server/api/routes/                 FastAPI endpoints
 server/services/peka_service.py     Original Cohere calls and LangChain chains
 server/services/task_retrieval.py   User-scoped BM25 task retrieval
-server/services/task_rag.py         Cohere v2 answers and task-reference validation
+server/services/task_rag.py         Retrieved-context answers and task-reference validation
+server/services/ai_provider.py      Configurable provider boundary
+server/services/heart.py            Deterministic personal HEART metrics
+server/services/weekly_review.py    Evidence-linked weekly reflections
+server/migrations/                  Activity schema and task event triggers
 integrations/mcp/                  Local MCP adapter and separate requirements
 server/tests/                      Retrieval, API, model-boundary, and MCP tests
 server/repositories/               Supabase data access
@@ -128,11 +135,11 @@ docs/                              Architecture, research, limitations, roadmap
 
 This is a hackathon prototype. The clearest next steps are:
 
-- Add reproducible database migrations and a consistent environment-based API URL.
+- Complete baseline migrations for the original user/task tables and review their access policies.
 - Complete the unified assistant's task-analysis context lookup; it currently calls an unimplemented `get_user_tasks()` method. The separate `/api/peka/analyze` route accepts task context explicitly.
 - Migrate legacy model calls and add evaluation cases for extraction accuracy, invalid outputs, and cross-user access boundaries.
-- Persist dashboard calendar state and connect it deliberately to the Google Calendar flow.
-- Finish focus-session history: the current Next.js session route does not implement the GET endpoint the history component expects.
+- Add cross-device day-plan persistence and deliberate Google Calendar synchronization.
+- Add a detailed session-history view beyond the current weekly activity summary.
 - Review authentication, CORS, cookies, and debug logging before public deployment.
 - Evaluate retrieval relevance on real student questions, add semantic search only if useful, and consider write tools or hosted MCP after defining authorization boundaries.
 
@@ -141,3 +148,15 @@ See [the architecture guide](docs/architecture.md) for details and a proposed im
 ## Team
 
 Created by Jeffrey Ye, Truman Chan (`tmanzhe`), Terence Yang, and William Wu. This is a collaborative project; Git history records individual contributions.
+
+
+## Development checks
+
+```sh
+cd client
+npm ci
+npm run build
+node --test tests/focusClock.test.cjs
+```
+
+Backend and MCP checks are described in [the integration guide](docs/rag-mcp.md). HEART metrics are deterministic and can run without an AI key; generating a reflection is optional and requires a configured provider. No live account data or paid inference is required by the automated checks.

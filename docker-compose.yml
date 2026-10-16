@@ -13,6 +13,7 @@ services:
       - /app/node_modules
     environment:
       - NODE_ENV=development
+      - API_PROXY_URL=http://server:8000
     command: npm run dev
 
   server:

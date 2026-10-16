@@ -27,6 +27,7 @@ Check-ins are optional and replace the same user's previous response for that lo
 ## Endpoints
 
 - `GET /api/insights/summary?timezone=America/Toronto`
+- `POST /api/insights/review?timezone=America/Toronto` — optional reflection from computed aggregate evidence
 - `POST /api/insights/checkins` with `score` and `timezone`
 - `POST /api/insights/focus` with a UUID `id` and `planned_seconds`
 - `PATCH /api/insights/focus/{id}` with `status` (`completed` or `abandoned`) and `actual_seconds`
