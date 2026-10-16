@@ -34,3 +34,16 @@ Check-ins are optional and replace the same user's previous response for that lo
 - `PATCH /api/todo/{id}/completion` with `completed` (boolean)
 
 The server calculates all metrics. AI reflections receive computed evidence, not authority to calculate or change the underlying numbers. Measurements describe app activity and self-reported clarity; they do not establish improvements in mental health, learning, or real-world productivity.
+
+
+## Heartbeat and duplicate-session protection
+
+Apply `server/migrations/002_focus_heartbeat.sql` after migration 001. A database transaction locks the user's row when starting a session, and a partial unique index allows one active focus session per user. Retrying a UUIDv4 start returns the same session. A competing start from another tab reuses the existing active session instead of creating a duplicate; the timer adopts its ID and recorded progress.
+
+The browser sends a heartbeat every 30 seconds while running or paused, and when it comes back online or becomes visible. The authenticated heartbeat endpoint records monotonic progress and checks it against the planned duration and elapsed wall-clock time. Finished sessions cannot be reopened by a heartbeat.
+
+A session without a heartbeat for ten minutes is marked **interrupted**, never completed. Expiry runs when a user starts, heartbeats, reads a session, or requests an activity summary; no background scheduler is required. Only progress actually received by the server contributes to recorded minutes. Long browser suspension or offline use may therefore interrupt a legitimate session.
+
+`POST /api/insights/focus/{id}/heartbeat` accepts `actual_seconds`. Ownership comes from authentication. The database RPC functions are callable only by the backend service role. The migration reconciles old duplicate active sessions before creating the unique index.
+
+No load benchmark was run for this addition. There is no measured duplicate-prevention volume or throughput claim.

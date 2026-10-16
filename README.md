@@ -23,7 +23,7 @@ Our purpose is to make planning feel lighter, so students can spend less energy 
 | Peka | Natural-language task creation, general productivity questions, and a separate task-analysis endpoint. |
 | Task RAG | Authenticated keyword search and source-linked answers over saved tasks through `/api/rag/search` and `/api/rag/ask`. |
 | MCP | A local stdio server exposing three read-only task tools to compatible AI clients. |
-| Focus | Configurable timers with pause/resume, account-scoped browser recovery, durable session records, and retryable saves. |
+| Focus | Configurable timers with pause/resume, account-scoped browser recovery, durable session records, heartbeat recovery, and one-active-session database locking. |
 | HEART insights | Personal clarity check-ins, active days, adoption milestones, return indicators, focus completion, and seven-day activity charts. |
 | Weekly reflection | Optional AI observations grounded in computed metrics, with evidence references and one suggested experiment. |
 | Google Calendar | OAuth and calendar API integration code for listing, creating, updating, and deleting events. Requires Google configuration. |
@@ -87,7 +87,7 @@ The full app also requires Python 3.11+ and a configured Supabase project. AI fe
 
 1. Create `server/.env` with your own `SUPABASE_URL`, `SUPABASE_API_KEY`, `COHERE_API_KEY`, `SECRET_KEY`, and `SESSION_SECRET_KEY`. Use separate random signing/session secrets. For Google features, also set `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` on the server, and `NEXT_PUBLIC_GOOGLE_CLIENT_ID` in `client/.env.local`. Keep private keys out of client variables and version control.
 2. Provision the database tables expected by the code: `users`, `todo`, and `user_preferences`. This hackathon repository does not yet include a complete database migration or policy setup; environment variables alone are not sufficient to provision the full app. The models and repositories under `server/` document the expected fields.
-3. Apply [`server/migrations/001_heart_activity.sql`](server/migrations/001_heart_activity.sql) to the existing Supabase database for completion, focus, and HEART features. Use a **server-only service_role key** as `SUPABASE_API_KEY`; new activity tables deliberately deny direct browser access. The migration has been checked against temporary local PostgreSQL, but must be applied to your own project.
+3. Apply [`server/migrations/001_heart_activity.sql`](server/migrations/001_heart_activity.sql), then [`002_focus_heartbeat.sql`](server/migrations/002_focus_heartbeat.sql) to the existing Supabase database for completion, focus, and HEART features. Use a **server-only service_role key** as `SUPABASE_API_KEY`; new activity tables deliberately deny direct browser access. The migration has been checked against temporary local PostgreSQL, but must be applied to your own project.
 4. Start the API in a separate terminal:
 
    ```sh
