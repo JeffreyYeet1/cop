@@ -1,5 +1,8 @@
 from fastapi import APIRouter, Depends, HTTPException
 from typing import List
+from pydantic import BaseModel
+from datetime import datetime, timezone
+from repositories.todo_repo import supabase
 from schemas.todo import Todo, TodoCreate
 from services.todo_service import create_todo, get_user_todos, get_todo, update_todo, delete_todo
 from api.dependencies import get_current_user
@@ -40,4 +43,18 @@ async def delete_todo_item(todo_id: int, current_user: User = Depends(get_curren
     """Delete a todo item"""
     if not delete_todo(todo_id, current_user.id):
         raise HTTPException(status_code=404, detail="Todo not found")
-    return {"message": "Todo deleted successfully"} 
+    return {"message": "Todo deleted successfully"}
+
+class CompletionRequest(BaseModel):
+    completed: bool
+
+
+@router.patch("/{todo_id}/completion", response_model=Todo)
+async def set_completion(todo_id: int, body: CompletionRequest, current_user: User = Depends(get_current_user)):
+    existing = get_todo(todo_id, current_user.id)
+    timestamp = existing.completed_at or datetime.now(timezone.utc) if body.completed else None
+    # Only update the timestamp when the state changes; DB trigger records transitions atomically.
+    result = supabase.table('todo').update({'completed_at': timestamp.isoformat() if timestamp else None}).eq('id', todo_id).eq('user_id', current_user.id).execute()
+    if not result.data:
+        raise HTTPException(404, 'Task not found')
+    return Todo(**result.data[0])

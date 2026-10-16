@@ -21,6 +21,7 @@ class Todo(TodoBase):
     id: int
     user_id: int
     created_at: datetime
+    completed_at: Optional[datetime] = None
 
     class Config:
         from_attributes = True 
