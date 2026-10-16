@@ -4,7 +4,7 @@ import { Check, Clock3, Pause, Play, RotateCcw } from 'lucide-react';
 import { insightsService } from '../services/insightsService';
 import { focusStorageKey, remainingSeconds } from '../../lib/focusClock';
 
-type Timer = { id: string | null; planned: number; remaining: number; deadline: number | null; phase: 'idle' | 'starting' | 'running' | 'paused' | 'pending' | 'saved'; outcome?: 'completed' | 'abandoned' };
+type Timer = { id: string | null; planned: number; remaining: number; deadline: number | null; phase: 'idle' | 'starting' | 'running' | 'paused' | 'pending' | 'saved'; outcome?: 'completed' | 'abandoned' | 'interrupted' };
 const fresh = (minutes: number): Timer => ({ id: null, planned: minutes * 60, remaining: minutes * 60, deadline: null, phase: 'idle' });
 
 export default function PomodoroTimer() {
@@ -55,7 +55,7 @@ export default function PomodoroTimer() {
     setTimer(previous => ({ ...previous, remaining, phase: 'pending', deadline: null, outcome }));
     try {
       const session = await insightsService.finishFocus(timer.id, outcome, timer.planned - remaining);
-      setTimer(previous => ({ ...previous, phase: 'saved', outcome: session.status === 'completed' ? 'completed' : 'abandoned' }));
+      setTimer(previous => ({ ...previous, phase: 'saved', outcome: session.status === 'completed' ? 'completed' : session.status === 'interrupted' ? 'interrupted' : 'abandoned' }));
     } catch (failure) { setError(failure instanceof Error ? failure.message : 'Could not save this session. Please retry.'); }
     finally { saving.current = false; setBusy(false); }
   };
@@ -74,12 +74,45 @@ export default function PomodoroTimer() {
         const id = timer.id || crypto.randomUUID();
         setTimer(previous => ({ ...previous, id, phase: 'starting' }));
         const session = await insightsService.startFocus(id, timer.planned);
-        if (session.status !== 'active') setTimer(previous => ({ ...previous, phase: 'saved' }));
-        else setTimer(previous => ({ ...previous, phase: 'running', deadline: Date.now() + previous.remaining * 1000 }));
+        if (session.status !== 'active') setTimer(previous => ({ ...previous, phase: 'saved', outcome: session.status }));
+        else {
+          const remaining = session.id === id ? timer.remaining : Math.max(0, session.planned_seconds - session.actual_seconds);
+          setTimer({ id: session.id, planned: session.planned_seconds, remaining, phase: 'running', deadline: Date.now() + remaining * 1000 });
+          setDuration(session.planned_seconds / 60);
+        }
       }
     } catch (failure) { setError(failure instanceof Error ? failure.message : 'Could not start the session.'); }
     finally { setBusy(false); }
   };
+  // Keep the latest clock snapshot without restarting the heartbeat interval on every tick.
+  const latest = useRef(timer);
+  latest.current = timer;
+  useEffect(() => {
+    if (!ready || mode !== 'focus' || !timer.id || !['running', 'paused'].includes(timer.phase)) return;
+    let alive = true;
+    let sending = false;
+    const heartbeat = async () => {
+      const current = latest.current;
+      if (sending || !current.id || !['running', 'paused'].includes(current.phase)) return;
+      sending = true;
+      try {
+        const remaining = current.phase === 'running' ? remainingSeconds(current.deadline!) : current.remaining;
+        const session = await insightsService.heartbeat(current.id, current.planned - remaining);
+        if (!alive) return;
+        if (session.status !== 'active') {
+          setTimer(previous => ({ ...previous, phase: 'saved', deadline: null, outcome: session.status === 'completed' ? 'completed' : session.status === 'interrupted' ? 'interrupted' : 'abandoned' }));
+        }
+      } catch (failure) {
+        if (alive) setError('Heartbeat could not be saved. Reconnect soon; a session without a heartbeat for 10 minutes is interrupted.');
+      } finally { sending = false; }
+    };
+    void heartbeat();
+    const interval = setInterval(heartbeat, 30000);
+    const visible = () => { if (document.visibilityState === 'visible') void heartbeat(); };
+    document.addEventListener('visibilitychange', visible);
+    window.addEventListener('online', heartbeat);
+    return () => { alive = false; clearInterval(interval); document.removeEventListener('visibilitychange', visible); window.removeEventListener('online', heartbeat); };
+  }, [ready, mode, timer.id, timer.phase]);
   const active = !['idle', 'saved'].includes(timer.phase);
   const progress = (timer.planned - timer.remaining) / timer.planned * 100;
   return <section className="rounded-3xl border border-stone-200 bg-white p-6 sm:p-10 shadow-sm" aria-labelledby="timer-title">
@@ -87,8 +120,8 @@ export default function PomodoroTimer() {
     <div className="text-center"><p className="text-xs uppercase tracking-[.2em] text-stone-400">One thing at a time</p><h2 id="timer-title" className="text-xl mt-3 text-stone-800">{mode === 'focus' ? 'Make a little space to focus.' : 'Take a moment for yourself.'}</h2>
       <div className="text-7xl sm:text-8xl font-light tracking-tight tabular-nums my-9 text-stone-800" role="timer" aria-label="Time remaining">{Math.floor(timer.remaining / 60).toString().padStart(2, '0')}:{(timer.remaining % 60).toString().padStart(2, '0')}</div>
       <div className="h-1.5 rounded-full bg-stone-100 overflow-hidden max-w-xs mx-auto"><div className="h-full bg-violet-400" style={{ width: `${progress}%` }} /></div>
-      {timer.phase === 'saved' ? <div className="my-7"><p className="text-emerald-700 text-sm flex items-center justify-center gap-2"><Check size={16} />{mode !== 'focus' ? 'Break finished.' : timer.outcome === 'completed' ? 'Session saved. Well done for showing up.' : 'Time recorded. You can start fresh.'}</p><button onClick={() => setTimer(fresh(mode === 'focus' ? duration : mode === 'short' ? 5 : 15))} className="mt-4 text-sm text-violet-700 underline underline-offset-4">Start a new session</button></div> : <div className="flex flex-wrap justify-center gap-3 my-7">
-        {timer.phase === 'running' ? <button onClick={() => setTimer(previous => ({ ...previous, remaining: remainingSeconds(previous.deadline!), deadline: null, phase: 'paused' }))} className="inline-flex items-center gap-2 rounded-xl bg-violet-700 px-6 py-3 text-white"><Pause size={18} />Pause</button> : timer.phase === 'pending' ? <button disabled={busy} onClick={() => finish(timer.outcome || 'completed')} className="rounded-xl bg-violet-700 px-6 py-3 text-white disabled:opacity-50">{busy ? 'Saving…' : 'Retry save'}</button> : <button disabled={busy || !ready} onClick={start} className="inline-flex items-center gap-2 rounded-xl bg-violet-700 px-6 py-3 text-white disabled:opacity-50"><Play size={17} />{busy ? 'Starting…' : timer.phase === 'paused' ? 'Resume' : timer.phase === 'starting' ? 'Retry start' : 'Start session'}</button>}
+      {timer.phase === 'saved' ? <div className="my-7"><p className="text-emerald-700 text-sm flex items-center justify-center gap-2"><Check size={16} />{mode !== 'focus' ? 'Break finished.' : timer.outcome === 'completed' ? 'Session saved. Well done for showing up.' : timer.outcome === 'interrupted' ? 'Session interrupted after its heartbeat stopped. You can start fresh.' : 'Time recorded. You can start fresh.'}</p><button onClick={() => setTimer(fresh(mode === 'focus' ? duration : mode === 'short' ? 5 : 15))} className="mt-4 text-sm text-violet-700 underline underline-offset-4">Start a new session</button></div> : <div className="flex flex-wrap justify-center gap-3 my-7">
+        {timer.phase === 'running' ? <button onClick={() => setTimer(previous => ({ ...previous, remaining: remainingSeconds(previous.deadline!), deadline: null, phase: 'paused' }))} className="inline-flex items-center gap-2 rounded-xl bg-violet-700 px-6 py-3 text-white"><Pause size={18} />Pause</button> : timer.phase === 'pending' ? <button disabled={busy} onClick={() => finish(timer.outcome === 'abandoned' ? 'abandoned' : 'completed')} className="rounded-xl bg-violet-700 px-6 py-3 text-white disabled:opacity-50">{busy ? 'Saving…' : 'Retry save'}</button> : <button disabled={busy || !ready} onClick={start} className="inline-flex items-center gap-2 rounded-xl bg-violet-700 px-6 py-3 text-white disabled:opacity-50"><Play size={17} />{busy ? 'Starting…' : timer.phase === 'paused' ? 'Resume' : timer.phase === 'starting' ? 'Retry start' : 'Start session'}</button>}
         {active && timer.phase !== 'pending' && timer.phase !== 'starting' && <button disabled={busy} onClick={() => mode === 'focus' ? finish('abandoned') : setTimer(fresh(mode === 'short' ? 5 : 15))} className="inline-flex items-center gap-2 rounded-xl border border-stone-200 px-4 py-3 text-sm text-stone-600"><RotateCcw size={15} />End early</button>}
       </div>}
       {error && <p role="alert" className="text-sm text-red-700 max-w-sm mx-auto mb-5">{error}</p>}

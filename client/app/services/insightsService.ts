@@ -25,7 +25,8 @@ export interface WeeklyReview {
 }
 export interface FocusSession {
   id: string; planned_seconds: number; actual_seconds: number;
-  status: 'active' | 'completed' | 'abandoned'; started_at: string; ended_at: string | null;
+  status: 'active' | 'completed' | 'abandoned' | 'interrupted';
+  reused?: boolean; started_at: string; ended_at: string | null;
 }
 const zone = () => Intl.DateTimeFormat().resolvedOptions().timeZone;
 export const insightsService = {
@@ -33,5 +34,6 @@ export const insightsService = {
   checkin: (score: number) => api('/insights/checkins', { method: 'POST', body: JSON.stringify({ score, timezone: zone() }) }),
   review: () => api<WeeklyReview>(`/insights/review?timezone=${encodeURIComponent(zone())}`, { method: 'POST' }),
   startFocus: (id: string, planned_seconds: number) => api<FocusSession>('/insights/focus', { method: 'POST', body: JSON.stringify({ id, planned_seconds }) }),
+  heartbeat: (id: string, actual_seconds: number) => api<FocusSession>(`/insights/focus/${id}/heartbeat`, { method: 'POST', body: JSON.stringify({ actual_seconds }) }),
   finishFocus: (id: string, status: 'completed' | 'abandoned', actual_seconds: number) => api<FocusSession>(`/insights/focus/${id}`, { method: 'PATCH', body: JSON.stringify({ status, actual_seconds }) }),
 };
