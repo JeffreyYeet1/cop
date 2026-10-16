@@ -1,16 +1,16 @@
 "use client";
 
 import { SignUpForm } from "../components/signup-form";
-import { Metadata } from "next";
+
 import BaseNavBar from "../components/baseNavBar";
+import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 
 export default function SignUpPage() {
   const router = useRouter();
-  const token = localStorage.getItem('token');
-  if (token) {
-    router.push('/dashboard');
-  }
+  useEffect(() => {
+    if (localStorage.getItem('token')) router.replace('/dashboard');
+  }, [router]);
   return (
     <div className="min-h-screen bg-gradient-to-br from-violet-100 via-white to-sky-100">
       <nav className="w-full">
