@@ -95,7 +95,7 @@ class RAGTests(unittest.IsolatedAsyncioTestCase):
         original = httpx.AsyncClient
         def mock_client(**kwargs):
             return original(transport=httpx.MockTransport(respond), **kwargs)
-        with patch.dict(os.environ, {'COHERE_API_KEY': 'test-only-key'}), patch('services.task_rag.httpx.AsyncClient', side_effect=mock_client):
+        with patch.dict(os.environ, {'COHERE_API_KEY': 'test-only-key'}), patch('services.ai_provider.httpx.AsyncClient', side_effect=mock_client):
             result = await TaskRAGService(lambda owner: TASKS).answer(7, 'algorithms')
         self.assertEqual(result['sources'][0]['task_id'], 1)
 
@@ -106,7 +106,7 @@ class RAGTests(unittest.IsolatedAsyncioTestCase):
             self.assertEqual(error.exception.status_code, 503)
         original = httpx.AsyncClient
         for response in (httpx.Response(429, json={'detail': 'private provider error'}), httpx.Response(200, json={})):
-            with patch.dict(os.environ, {'COHERE_API_KEY': 'test-only-key'}), patch('services.task_rag.httpx.AsyncClient', side_effect=lambda **kwargs: original(transport=httpx.MockTransport(lambda req: response), **kwargs)):
+            with patch.dict(os.environ, {'COHERE_API_KEY': 'test-only-key'}), patch('services.ai_provider.httpx.AsyncClient', side_effect=lambda **kwargs: original(transport=httpx.MockTransport(lambda req: response), **kwargs)):
                 with self.assertRaises(HTTPException) as error:
                     await TaskRAGService(lambda owner: TASKS).answer(7, 'algorithms')
                 self.assertEqual(error.exception.status_code, 502)
