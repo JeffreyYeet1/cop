@@ -19,6 +19,7 @@ def all_rows(query):
 
 def snapshot(user_id, since, until):
     db = database()
+    db.rpc('expire_focus_sessions', {'p_user_id': user_id}).execute()
     events = all_rows(db.table('activity_events').select('*').eq('user_id', user_id).gte('created_at', since).lt('created_at', until).order('created_at').order('id'))
     sessions = all_rows(db.table('focus_sessions').select('*').eq('user_id', user_id).gte('started_at', since).lt('started_at', until).order('started_at').order('id'))
     checkins = all_rows(db.table('clarity_checkins').select('*').eq('user_id', user_id).gte('local_date', since[:10]).lte('local_date', until[:10]).order('local_date'))
@@ -34,16 +35,24 @@ def save_checkin(user_id, local_date, score):
 
 
 def start_session(user_id, session_id, planned_seconds):
-    # Ignore duplicate UUIDs: never let a conflicting UUID overwrite another owner's row.
-    database().table('focus_sessions').upsert({'id': str(session_id), 'user_id': user_id, 'planned_seconds': planned_seconds}, on_conflict='id', ignore_duplicates=True).execute()
-    rows = database().table('focus_sessions').select('*').eq('user_id', user_id).eq('id', str(session_id)).execute().data
-    if not rows:
-        from fastapi import HTTPException
-        raise HTTPException(409, 'Session could not be started. Try again with a new session ID.')
-    return rows[0]
+    return database().rpc('start_focus_session', {'p_user_id': user_id, 'p_session_id': str(session_id), 'p_planned_seconds': planned_seconds}).execute().data
+
+
+def heartbeat_session(user_id, session_id, actual_seconds):
+    from fastapi import HTTPException
+    try:
+        result = database().rpc('heartbeat_focus_session', {'p_user_id': user_id, 'p_session_id': str(session_id), 'p_actual_seconds': actual_seconds}).execute().data
+    except Exception as error:
+        if getattr(error, 'code', None) == '22023':
+            raise HTTPException(422, 'Focus progress exceeds the session duration or elapsed time.') from error
+        raise
+    if not result:
+        raise HTTPException(404, 'Focus session not found.')
+    return result
 
 
 def get_session(user_id, session_id):
+    database().rpc('expire_focus_sessions', {'p_user_id': user_id}).execute()
     rows = database().table('focus_sessions').select('*').eq('user_id', user_id).eq('id', str(session_id)).execute().data
     return rows[0] if rows else None
 

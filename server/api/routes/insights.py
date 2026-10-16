@@ -2,7 +2,7 @@ from datetime import datetime, timedelta, timezone
 from typing import Literal
 from uuid import UUID
 from fastapi import APIRouter, Depends, Query, HTTPException
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, UUID4
 from starlette.concurrency import run_in_threadpool
 from api.dependencies import get_current_user
 from schemas.user import User
@@ -22,7 +22,7 @@ class Checkin(BaseModel):
 
 
 class FocusStart(BaseModel):
-    id: UUID
+    id: UUID4
     planned_seconds: int = Field(ge=60, le=14400)
 
 
@@ -75,3 +75,12 @@ def get_review_builder():
 async def weekly_review(timezone: str = Query(default='UTC', max_length=100), user: User = Depends(get_current_user), store=Depends(get_store), build=Depends(get_review_builder)):
     summary = await summary_for(user.id, timezone, store)
     return await build(summary)
+
+
+class Heartbeat(BaseModel):
+    actual_seconds: int = Field(ge=0, le=14400)
+
+
+@router.post('/focus/{session_id}/heartbeat')
+async def focus_heartbeat(session_id: UUID, body: Heartbeat, user: User = Depends(get_current_user), store=Depends(get_store)):
+    return await run_in_threadpool(store.heartbeat_session, user.id, session_id, body.actual_seconds)
