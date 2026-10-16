@@ -1,8 +1,10 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Calendar as CalendarIcon, Plus, Users, ChevronLeft, ChevronRight, Sparkles, Trash2, X } from 'lucide-react';
 import { createPortal } from 'react-dom';
+import Link from 'next/link';
+import { focusStorageKey } from '../../lib/focusClock';
 
 // Sample event data
 interface CalendarEvent {
@@ -12,13 +14,6 @@ interface CalendarEvent {
   duration: number;
   color: string;
 }
-
-const initialEvents: CalendarEvent[] = [
-  { id: 1, title: 'Product Meeting', time: '9:00', duration: 60, color: 'blue' },
-  { id: 2, title: 'Lunch with Team', time: '12:30', duration: 90, color: 'green' },
-  { id: 3, title: 'Design Review', time: '15:00', duration: 45, color: 'purple' },
-  { id: 4, title: 'Client Call', time: '17:00', duration: 30, color: 'orange' }
-];
 
 const getEventColor = (color: string) => {
   const colors = {
@@ -187,7 +182,26 @@ const NewEventModal: React.FC<NewEventModalProps> = ({ isOpen, onClose, onSubmit
 };
 
 const Calendar: React.FC = () => {
-  const [events, setEvents] = useState<CalendarEvent[]>(initialEvents);
+  const [events, setEvents] = useState<CalendarEvent[]>([]);
+  const [storageReady, setStorageReady] = useState(false);
+  const [storageError, setStorageError] = useState('');
+  const storageKey = useRef<string | null>(null);
+  useEffect(() => {
+    try {
+      const account = focusStorageKey(localStorage.getItem('token'));
+      const localDay = new Date().toLocaleDateString('en-CA');
+      storageKey.current = account ? `${account.replace('focus', 'plan')}:${localDay}` : null;
+      const saved = JSON.parse(localStorage.getItem(storageKey.current || '') || '[]');
+      if (Array.isArray(saved)) setEvents(saved.filter(item => Number.isFinite(item.id) && typeof item.title === 'string' && /^\d{1,2}:\d{2}$/.test(item.time) && Number.isFinite(item.duration) && item.duration > 0 && item.duration <= 1440));
+    } catch { setStorageError('Browser storage is unavailable. This day plan will not survive a refresh.'); }
+    setStorageReady(true);
+  }, []);
+  useEffect(() => {
+    if (storageReady && storageKey.current) {
+      try { localStorage.setItem(storageKey.current, JSON.stringify(events)); }
+      catch { setStorageError('Could not save the day plan on this browser.'); }
+    }
+  }, [events, storageReady]);
   const [draggedEvent, setDraggedEvent] = useState<CalendarEvent | null>(null);
   const [showNewEventModal, setShowNewEventModal] = useState(false);
   const [newEvent, setNewEvent] = useState({
@@ -338,7 +352,7 @@ const Calendar: React.FC = () => {
 
   const handleCreateEvent = () => {
     const newEventObj = {
-      id: events.length + 1,
+      id: Math.max(0, ...events.map(event => event.id)) + 1,
       ...newEvent
     };
     setEvents([...events, newEventObj]);
@@ -349,25 +363,22 @@ const Calendar: React.FC = () => {
   return (
     <>
       <div 
-        className={`p-5 min-h-full bg-white overflow-hidden animate-fadeIn relative ${
+        className={`p-5 min-h-full rounded-2xl border border-stone-200 bg-white overflow-hidden animate-fadeIn relative ${
           showNewEventModal ? 'blur-sm' : ''
         } transition-all duration-300`}
       >
         {/* Header */}
-        <div className="flex justify-between items-center mb-6 animate-fadeIn relative" style={{animationDelay: "0.1s"}}>
+        <div className="flex flex-wrap gap-4 justify-between items-center mb-6 animate-fadeIn relative" style={{animationDelay: "0.1s"}}>
           <div>
             <div className="flex items-center space-x-2 mb-1">
               <div className="w-3 h-3 bg-violet-500 rounded-full animate-pulse"></div>
-              <h2 className="text-xl font-bold text-gray-900 group-hover:text-violet-600 transition-all duration-300">Calendar</h2>
+              <h2 className="text-xl font-bold text-gray-900 group-hover:text-violet-600 transition-all duration-300">Day plan</h2>
             </div>
             <p className="text-gray-500 ml-5">{dayName}, {monthDay}</p>
           </div>
 
           <div className="flex items-center space-x-3">
-            <button className="inline-flex items-center gap-1 px-3 py-1.5 text-sm font-medium rounded-full bg-violet-50 text-violet-600 border border-violet-100 hover:bg-violet-100 transition-all duration-300 transform hover:-translate-y-1">
-              <Users size={14} className="mr-1" />
-              Calendars
-            </button>
+            <Link href="/calendar" className="text-xs text-stone-500 hover:text-violet-700">Google Calendar ↗</Link>
             <button 
               onClick={() => setShowNewEventModal(true)}
               className="inline-flex items-center gap-1 px-3 py-1.5 text-sm font-medium rounded-full bg-white text-violet-600 border border-violet-200 hover:bg-violet-50 transition-all duration-300 transform hover:-translate-y-1"
@@ -378,22 +389,8 @@ const Calendar: React.FC = () => {
           </div>
         </div>
 
-        {/* Navigation */}
-        <div className="flex justify-between items-center mb-6 animate-fadeIn relative" style={{animationDelay: "0.2s"}}>
-          <div className="flex space-x-1">
-            <button className="p-1.5 rounded-full hover:bg-gray-100 transition-all duration-200">
-              <ChevronLeft size={16} className="text-gray-500" />
-            </button>
-            <button className="p-1.5 rounded-full hover:bg-gray-100 transition-all duration-200">
-              <ChevronRight size={16} className="text-gray-500" />
-            </button>
-          </div>
-          <div className="flex items-center text-sm text-gray-500">
-            <Sparkles size={14} className="mr-1.5 text-violet-500" />
-            Today's Schedule
-          </div>
-        </div>
-
+        {storageError && <p role="alert" className="text-xs text-red-700 mb-4">{storageError}</p>}
+        <p className="text-[11px] text-stone-500 mb-5">{events.length ? `${events.length} time blocks for today` : 'Drop a task here, or add your first time block.'}</p>
         {/* Calendar Grid */}
         <div className="border-t border-gray-200 animate-fadeIn relative" style={{animationDelay: "0.3s"}}>
           {/* Render events first so they appear above the grid */}
@@ -427,11 +424,12 @@ const Calendar: React.FC = () => {
                 
                 {/* Delete button */}
                 <button
+                  aria-label={`Delete ${event.title}`}
                   onClick={(e) => {
                     e.stopPropagation();
                     handleDeleteEvent(event.id);
                   }}
-                  className="absolute top-1 right-1 p-1 rounded-full opacity-0 group-hover:opacity-100 hover:bg-red-100 transition-all duration-200 transform hover:scale-110"
+                  className="absolute top-1 right-1 p-1 rounded-full opacity-60 group-hover:opacity-100 focus:opacity-100 hover:bg-red-100 transition-all duration-200 transform hover:scale-110"
                 >
                   <Trash2 size={14} className="text-red-500" />
                 </button>
